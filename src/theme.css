@@ -244,6 +244,9 @@
 
 /* ───── 고문서 — 양피지와 잉크, 붉은 루브릭 띠 ───── */
 [data-theme="scriptorium"] {
+  --sheet-under: #e3d3ae;
+  --paper-light: #fdf6e6;
+  --rule-line: #ddc79a;
   --font-sans: Georgia, "Noto Serif KR", serif;
 
   --bg-canvas: #ede0c5;
@@ -294,6 +297,7 @@
 
 /* ───── 동물 마을 — 포근한 크림빛, 발자국 무늬 ───── */
 [data-theme="animal-village"] {
+  --ear-inner: #f3b9b4;
   --font-sans: "Nunito", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
 
   --bg-canvas: #fff8ed;
@@ -305,7 +309,7 @@
   --bg-panel: #fffcf4;
   --bg-panel-hover: #f6ecdc;
 
-  --node-bg: #fffcf4;
+  --node-bg: #fce2d8;
   --node-border: #dcc3ac;
   --node-border-width: 1px;
   --node-radius: 20px;
@@ -355,7 +359,7 @@
   --bg-panel: #fdfcff;
   --bg-panel-hover: #ece6f8;
 
-  --node-bg: #fdfcff;
+  --node-bg: #e8dff7;
   --node-border: #cdc5e5;
   --node-border-width: 1px;
   --node-radius: 22px;
@@ -394,6 +398,7 @@
 
 /* ───── 디저트 — 딸기빛 크림, 스프링클 무늬 ───── */
 [data-theme="dessert-friends"] {
+  --icing: #fff6df;
   --font-sans: "Nunito", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
 
   --bg-canvas: #fff5f2;
@@ -405,7 +410,7 @@
   --bg-panel: #fffbfa;
   --bg-panel-hover: #fbe7e4;
 
-  --node-bg: #fffbfa;
+  --node-bg: #fbe0e5;
   --node-border: #e3bec3;
   --node-border-width: 1px;
   --node-radius: 22px;

@@ -104,6 +104,10 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
         startEditing(id);
       }}
     >
+      {/* 테마마다 다른 장식(동물 귀, 생크림, 테두리 등). 모양은 index.css 가 정하고,
+          쓰지 않는 테마에서는 display:none 이라 아무것도 그리지 않는다. */}
+      <i className="mind-node__deco" aria-hidden="true" />
+
       {/* 좌우 양쪽에 연결점을 둔다. 어느 쪽을 쓸지는 레이아웃이 정한다. */}
       <Handle type="target" position={Position.Left} id="tl" />
       <Handle type="target" position={Position.Right} id="tr" />
