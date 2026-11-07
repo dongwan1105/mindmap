@@ -7,7 +7,7 @@ export type MindFlowNode = Node<
 >;
 
 const NODE_H = 42;
-const GAP_X = 70; // 부모-자식 가로 간격
+const GAP_X = 47; // 부모-자식 가로 간격 (연결선 길이)
 const GAP_Y = 14; // 형제 세로 간격
 
 export type Dir = "left" | "right";
