@@ -6,6 +6,10 @@ import { localStorageAdapter } from "../storage/local";
 import { DEFAULT_THEME, type ThemeId } from "../themes";
 
 const THEME_KEY = "mindmap.theme";
+const NAME_KEY = "mindmap.workspaceName";
+const NAME_AT_KEY = "mindmap.workspaceNameAt";
+
+export const DEFAULT_WORKSPACE_NAME = "마인드맵";
 
 const storage: StorageAdapter = localStorageAdapter;
 
@@ -72,6 +76,11 @@ interface MapState {
   /** 서버에서 영구 삭제된 행을 로컬에서도 없앤다 (다른 기기의 삭제 반영) */
   removeLocal: (folderIds: string[], mapIds: string[], nodeIds: string[]) => void;
 
+  /** 목록 맨 위 제목 */
+  workspaceName: string;
+  workspaceNameAt: number;
+  setWorkspaceName: (name: string, at?: number) => void;
+
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
 }
@@ -125,6 +134,8 @@ export const useMapStore = create<MapState>((set, get) => {
     editingInitial: null,
     loaded: false,
     panel: "map",
+    workspaceName: localStorage.getItem(NAME_KEY) || DEFAULT_WORKSPACE_NAME,
+    workspaceNameAt: Number(localStorage.getItem(NAME_AT_KEY) || 0),
     theme: (localStorage.getItem(THEME_KEY) as ThemeId) || DEFAULT_THEME,
 
     async load() {
@@ -701,6 +712,13 @@ export const useMapStore = create<MapState>((set, get) => {
       void storage.saveFolders(folders);
       void storage.saveMaps(maps);
       void storage.saveNodes(nodes);
+    },
+
+    setWorkspaceName(name, at = now()) {
+      localStorage.setItem(NAME_KEY, name);
+      localStorage.setItem(NAME_AT_KEY, String(at));
+      set({ workspaceName: name, workspaceNameAt: at });
+      onLocalChange?.();
     },
 
     setTheme(theme) {

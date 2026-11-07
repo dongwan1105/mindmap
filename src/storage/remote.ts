@@ -211,3 +211,23 @@ export async function deleteRows(folderIds: string[], mapIds: string[], nodeIds:
     if (error) throw error;
   }
 }
+
+/** 목록 제목 등 사용자별 설정 한 줄 */
+export async function getSettings(): Promise<{ name: string; updatedAt: number } | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("mindmap_settings")
+    .select("workspace_name, updated_at")
+    .maybeSingle();
+  if (error || !data) return null;
+  const row = data as { workspace_name: string; updated_at: number };
+  return { name: row.workspace_name, updatedAt: Number(row.updated_at) };
+}
+
+export async function saveSettings(name: string, updatedAt: number, userId: string) {
+  if (!supabase) return;
+  const { error } = await supabase
+    .from("mindmap_settings")
+    .upsert({ user_id: userId, workspace_name: name, updated_at: updatedAt });
+  if (error) throw error;
+}

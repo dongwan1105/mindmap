@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { useMapStore } from "../store/useMapStore";
+import { DEFAULT_WORKSPACE_NAME, useMapStore } from "../store/useMapStore";
 import { THEMES } from "../themes";
 import { signOut, type SyncStatus } from "../sync/useSync";
 import { trashEntries } from "./Trash";
@@ -31,6 +31,7 @@ export default function Sidebar({
   const allNodes = useMapStore((s) => s.nodes);
   const currentMapId = useMapStore((s) => s.currentMapId);
   const theme = useMapStore((s) => s.theme);
+  const workspaceName = useMapStore((s) => s.workspaceName);
   const hasPinned = useMapStore((s) =>
     s.nodes.some((n) => n.mapId === s.currentMapId && !n.deletedAt && n.x !== null),
   );
@@ -48,6 +49,7 @@ export default function Sidebar({
     deleteFolder,
     toggleFolder,
     moveMapToFolder,
+    setWorkspaceName,
   } = useMapStore.getState();
 
   const folders = allFolders
@@ -69,7 +71,9 @@ export default function Sidebar({
   for (const m of mapsIn(null)) rows.push({ kind: "map", id: m.id, map: m, inFolder: null });
 
   // ---------- 이름 수정 ----------
-  const [editing, setEditing] = useState<{ kind: "map" | "folder"; id: string } | null>(null);
+  const [editing, setEditing] = useState<{ kind: "map" | "folder" | "title"; id: string } | null>(
+    null,
+  );
   const [draft, setDraft] = useState("");
 
   const commitName = () => {
@@ -77,7 +81,8 @@ export default function Sidebar({
     const name = draft.trim();
     if (name) {
       if (editing.kind === "map") renameMap(editing.id, name);
-      else renameFolder(editing.id, name);
+      else if (editing.kind === "folder") renameFolder(editing.id, name);
+      else setWorkspaceName(name);
     }
     setEditing(null);
   };
@@ -224,7 +229,20 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar__header">
-        <span>마인드맵</span>
+        {editing?.kind === "title" ? (
+          nameInput(workspaceName)
+        ) : (
+          <span
+            className="sidebar__title"
+            title="더블클릭해서 이름 바꾸기"
+            onDoubleClick={() => {
+              setDraft(workspaceName);
+              setEditing({ kind: "title", id: "title" });
+            }}
+          >
+            {workspaceName || DEFAULT_WORKSPACE_NAME}
+          </span>
+        )}
         <span className="sidebar__actions">
           <button
             className="sidebar__add"
@@ -234,7 +252,15 @@ export default function Sidebar({
               onNavigate?.();
             }}
           >
-            🗀
+            <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+              <path
+                d="M2.4 5.2a1.4 1.4 0 0 1 1.4-1.4h3.3c.45 0 .87.21 1.13.57l.86 1.16h7.1a1.4 1.4 0 0 1 1.4 1.4v8.3a1.4 1.4 0 0 1-1.4 1.4H3.8a1.4 1.4 0 0 1-1.4-1.4V5.2Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
           <button
             className="sidebar__add"

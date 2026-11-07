@@ -39,20 +39,38 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px 14px 11px;
-  font-weight: 600;
-  font-size: 15px;
+  gap: 8px;
+  padding: 16px 14px 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* 목록 전체의 이름. 폴더명(15px/600)보다 확실히 윗단으로 보이게 */
+.sidebar__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: default;
 }
 
 .sidebar__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border-strong);
   background: transparent;
   border-radius: 6px;
-  width: 26px;
-  height: 26px;
+  width: 27px;
+  height: 27px;
+  padding: 0;
   cursor: pointer;
   font-size: 17px;
   line-height: 1;
+  color: var(--text-secondary);
 }
 
 .sidebar__add:hover {
@@ -63,7 +81,7 @@ button {
 .sidebar__list {
   flex: 1;
   overflow-y: auto;
-  padding: 2px 8px 8px;
+  padding: 6px 8px 8px;
 }
 
 .map-item {
@@ -1000,6 +1018,11 @@ button {
 
 .map-item--dropline {
   box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.sidebar__header .row-name-input {
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .row-name-input {

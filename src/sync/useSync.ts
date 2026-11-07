@@ -8,6 +8,8 @@ import {
   isAllowed,
   pullAll,
   pushRows,
+  getSettings,
+  saveSettings,
   rowToFolder,
   rowToMap,
   rowToNode,
@@ -31,6 +33,8 @@ const serverHas = {
 
 /** 로그아웃 직전 남은 변경을 올리기 위해 현재 세션을 모듈 수준에 둔다. */
 let activeSession: Session | null = null;
+/** 서버가 가지고 있다고 아는 제목의 수정 시각 */
+let serverNameAt = -1;
 
 /** 아직 서버에 없는 행을 모두 올린다. 올릴 게 없으면 바로 끝난다. */
 /** 영구 삭제된 행을 서버에서도 지운다. */
@@ -54,9 +58,19 @@ async function flushPurge(): Promise<void> {
   });
 }
 
+/** 목록 제목은 한 줄짜리라 행 추적과 따로 둔다 */
+async function flushName(): Promise<void> {
+  if (!activeSession) return;
+  const { workspaceName, workspaceNameAt } = useMapStore.getState();
+  if (workspaceNameAt === serverNameAt) return;
+  await saveSettings(workspaceName, workspaceNameAt, activeSession.user.id);
+  serverNameAt = workspaceNameAt;
+}
+
 async function flushPending(): Promise<void> {
   if (!activeSession) return;
   await flushPurge();
+  await flushName();
   const { folders, maps, nodes } = useMapStore.getState();
   const dirtyFolders = folders.filter((f) => serverHas.folders.get(f.id) !== f.updatedAt);
   const dirtyMaps = maps.filter((m) => serverHas.maps.get(m.id) !== m.updatedAt);
@@ -95,6 +109,7 @@ export function useSync() {
       setSyncHook(null);
       serverHas.maps.clear();
       serverHas.nodes.clear();
+      serverNameAt = -1;
     };
 
     const pushDirty = async () => {
@@ -106,10 +121,13 @@ export function useSync() {
       const dirtyNodes = nodes.filter((n) => serverHas.nodes.get(n.id) !== n.updatedAt);
       const hasPurge =
         pendingPurge.folders.size > 0 || pendingPurge.maps.size > 0 || pendingPurge.nodes.size > 0;
-      if (!dirtyFolders.length && !dirtyMaps.length && !dirtyNodes.length && !hasPurge) return;
+      const nameDirty = useMapStore.getState().workspaceNameAt !== serverNameAt;
+      if (!dirtyFolders.length && !dirtyMaps.length && !dirtyNodes.length && !hasPurge && !nameDirty)
+        return;
       setStatus("syncing");
       try {
         await flushPurge();
+        await flushName();
         await pushRows(dirtyFolders, dirtyMaps, dirtyNodes, session.user.id);
         dirtyFolders.forEach((f) => serverHas.folders.set(f.id, f.updatedAt));
         dirtyMaps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
@@ -140,6 +158,7 @@ export function useSync() {
         const acked = Number(localStorage.getItem(RESET_ACK_KEY) || 0);
         if (resetAt > acked) {
           useMapStore.getState().clearLocal();
+          serverNameAt = -1;
           serverHas.folders.clear();
           serverHas.maps.clear();
           serverHas.nodes.clear();
@@ -147,6 +166,16 @@ export function useSync() {
           pendingPurge.maps.clear();
           pendingPurge.nodes.clear();
           localStorage.setItem(RESET_ACK_KEY, String(resetAt));
+        }
+
+        // 제목: 서버 쪽이 더 최근이면 받아오고, 아니면 올린다
+        const remoteName = await getSettings();
+        const localAt = useMapStore.getState().workspaceNameAt;
+        if (remoteName && remoteName.updatedAt > localAt) {
+          useMapStore.getState().setWorkspaceName(remoteName.name, remoteName.updatedAt);
+          serverNameAt = remoteName.updatedAt;
+        } else {
+          serverNameAt = remoteName ? remoteName.updatedAt : -1;
         }
 
         const remote = await pullAll();
