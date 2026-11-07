@@ -16,3 +16,6 @@ export const supabase =
     : null;
 
 export const syncEnabled = supabase !== null;
+
+/** Google 제공자를 Supabase에서 켠 뒤 .env에서 true로 바꾼다. */
+export const googleEnabled = import.meta.env.VITE_ENABLE_GOOGLE === "true";

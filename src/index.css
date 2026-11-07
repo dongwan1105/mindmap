@@ -579,3 +579,37 @@ button {
 .account__dot--error {
   background: #e05b4b;
 }
+
+.gate__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 14px;
+  background: var(--bg-canvas);
+  border-radius: 9px;
+}
+
+.gate__tab {
+  flex: 1;
+  padding: 7px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gate__tab--on {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.gate__card .gate__input + .gate__input {
+  margin-top: 8px;
+}
+
+.gate__card .gate__input + .gate__btn--primary {
+  margin-top: 12px;
+}

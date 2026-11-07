@@ -147,13 +147,36 @@ export async function signInWithGoogle() {
   });
 }
 
-export async function signInWithEmail(email: string) {
+/** Supabase가 돌려주는 영문 오류를 쓸 만한 한국어로 바꾼다. */
+function friendly(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) return "메일 주소나 비밀번호가 맞지 않습니다.";
+  if (m.includes("user already registered") || m.includes("already been registered"))
+    return "이미 가입된 메일 주소입니다. 로그인해 주세요.";
+  if (m.includes("signups not allowed") || m.includes("signup is disabled"))
+    return "지금은 새 계정을 만들 수 없습니다. Supabase에서 가입을 잠시 열어야 합니다.";
+  if (m.includes("password should be")) return "비밀번호는 6자 이상이어야 합니다.";
+  if (m.includes("email rate limit") || m.includes("rate limit"))
+    return "메일 발송 한도에 걸렸습니다. 잠시 뒤 다시 시도해 주세요.";
+  if (m.includes("email not confirmed"))
+    return "메일 인증이 필요한 설정입니다. Supabase에서 Confirm email을 꺼 주세요.";
+  return message;
+}
+
+export async function signInWithPassword(email: string, password: string) {
   if (!supabase) throw new Error("동기화가 설정되지 않았습니다");
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin },
-  });
-  if (error) throw error;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(friendly(error.message));
+}
+
+export async function signUpWithPassword(email: string, password: string) {
+  if (!supabase) throw new Error("동기화가 설정되지 않았습니다");
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw new Error(friendly(error.message));
+  // Confirm email이 켜져 있으면 세션 없이 확인 메일만 발송된다
+  if (!data.session) {
+    throw new Error("계정은 만들어졌지만 메일 인증이 필요합니다. Supabase에서 Confirm email을 꺼 주세요.");
+  }
 }
 
 export async function signOut() {
