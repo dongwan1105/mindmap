@@ -143,8 +143,9 @@ button {
 }
 
 .theme-chip {
-  /* 한 줄에 3개씩, 넘치면 다음 줄로 */
-  flex: 1 1 calc(33.333% - 4px);
+  /* 한 줄에 3개씩, 넘치면 다음 줄로.
+     늘어나지 않게 해야 마지막 줄에 하나만 남아도 폭이 같다. */
+  flex: 0 1 calc(33.333% - 4px);
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -296,16 +297,19 @@ button {
   font-size: calc(var(--node-font-size) + 2px);
 }
 
-/* 모던 테마의 왼쪽 색 띠. --node-accent-bar 가 0 인 테마에서는 보이지 않는다.
+/* 카드 왼쪽의 작은 표식. 테마마다 모양이 다르다 —
+   모던은 세로 띠, 고문서는 붉은 루브릭 띠, 아기자기한 테마들은 동그라미.
+   --node-mark-w 가 0 인 테마에서는 보이지 않는다.
    카드 색을 바꾸면 그 색을, 아니면 테마 강조색을 따른다. */
 .mind-node:not(.mind-node--root)::before {
   content: "";
   position: absolute;
-  left: calc(var(--node-pad-x) - 9px);
-  top: 20%;
-  bottom: 20%;
-  width: var(--node-accent-bar);
-  border-radius: 2px;
+  left: var(--node-mark-left, calc(var(--node-pad-x) - 9px));
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--node-mark-w, 0px);
+  height: var(--node-mark-h, 60%);
+  border-radius: var(--node-mark-radius, 2px);
   background: var(--card-accent, var(--accent));
   pointer-events: none;
 }
@@ -393,6 +397,7 @@ button {
   z-index: -1;
   pointer-events: none;
   background-image: var(--canvas-wash, none);
+  background-size: var(--canvas-wash-size, auto);
 }
 
 /* 종이결. --canvas-grain 이 0 인 테마에서는 보이지 않는다. */

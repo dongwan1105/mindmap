@@ -13,7 +13,7 @@
   --radius-panel: 10px;
   /* 테마가 덮어쓸 수 있는 기본값 */
   --root-radius: var(--node-radius);
-  --node-accent-bar: 0px;
+  --node-mark-w: 0px;
 }
 
 /* ───────────────── 1. 종이 — 따뜻한 아날로그, 곡선 ───────────────── */
@@ -169,7 +169,8 @@
   --node-letter-spacing: -0.01em;
   --node-pad-y: 11px;
   --node-pad-x: 18px;
-  --node-accent-bar: 3px;
+  --node-mark-w: 3px;
+  --node-mark-h: 60%;
 
   --root-bg: #2563eb;
   --root-fg: #ffffff;
@@ -216,7 +217,8 @@
   --node-letter-spacing: -0.01em;
   --node-pad-y: 11px;
   --node-pad-x: 18px;
-  --node-accent-bar: 3px;
+  --node-mark-w: 3px;
+  --node-mark-h: 60%;
 
   --root-bg: #2563eb;
   --root-fg: #ffffff;
@@ -237,4 +239,256 @@
   --border-strong: #526581;
   --kbd-border: #2c3b55;
   --control-fg: #a4b2cc;
+}
+
+
+/* ───── 고문서 — 양피지와 잉크, 붉은 루브릭 띠 ───── */
+[data-theme="scriptorium"] {
+  --font-sans: Georgia, "Noto Serif KR", serif;
+
+  --bg-canvas: #ede0c5;
+  --canvas-wash:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Cdefs%3E%3ClinearGradient id=%22paper%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop stop-color=%22%23FCF4E2%22/%3E%3Cstop offset=%22.6%22 stop-color=%22%23F5E9CF%22/%3E%3Cstop offset=%221%22 stop-color=%22%23E8D4AD%22/%3E%3C/linearGradient%3E%3CradialGradient id=%22wax%22%3E%3Cstop stop-color=%22%23AD4D40%22/%3E%3Cstop offset=%22.75%22 stop-color=%22%238B342D%22/%3E%3Cstop offset=%221%22 stop-color=%22%23642821%22/%3E%3C/radialGradient%3E%3Cpattern id=%22grain%22 width=%2296%22 height=%2296%22 patternUnits=%22userSpaceOnUse%22%3E%3Ccircle cx=%227.05%22 cy=%2257.06%22 r=%220.65%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2252.22%22 cy=%2235.94%22 r=%220.55%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2257.48%22 cy=%2293.70%22 r=%220.53%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2236.48%22 cy=%2260.83%22 r=%220.53%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2277.67%22 cy=%2242.91%22 r=%220.56%22 fill=%22%2371542F%22 opacity=%220.06%22/%3E%3Ccircle cx=%2230.49%22 cy=%221.71%22 r=%220.42%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2233.30%22 cy=%2221.18%22 r=%220.59%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2233.58%22 cy=%2247.76%22 r=%220.32%22 fill=%22%2371542F%22 opacity=%220.12%22/%3E%3Ccircle cx=%2286.92%22 cy=%2254.85%22 r=%220.31%22 fill=%22%2371542F%22 opacity=%220.12%22/%3E%3Ccircle cx=%2220.80%22 cy=%225.28%22 r=%220.42%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2281.62%22 cy=%2214.07%22 r=%220.27%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%223.97%22 cy=%2263.64%22 r=%220.45%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Ccircle cx=%2289.79%22 cy=%2222.49%22 r=%220.56%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2291.24%22 cy=%227.63%22 r=%220.43%22 fill=%22%2371542F%22 opacity=%220.12%22/%3E%3Ccircle cx=%225.36%22 cy=%2229.23%22 r=%220.37%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2295.29%22 cy=%2218.33%22 r=%220.58%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2283.95%22 cy=%2214.09%22 r=%220.29%22 fill=%22%2371542F%22 opacity=%220.12%22/%3E%3Ccircle cx=%221.27%22 cy=%2261.64%22 r=%220.33%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2230.50%22 cy=%2259.92%22 r=%220.52%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2211.69%22 cy=%2279.61%22 r=%220.35%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2277.72%22 cy=%2274.09%22 r=%220.46%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2214.80%22 cy=%2284.42%22 r=%220.49%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2292.76%22 cy=%2267.23%22 r=%220.37%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2216.57%22 cy=%2226.62%22 r=%220.59%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2216.03%22 cy=%2250.08%22 r=%220.41%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Ccircle cx=%2279.84%22 cy=%2233.89%22 r=%220.28%22 fill=%22%2371542F%22 opacity=%220.06%22/%3E%3Ccircle cx=%2254.18%22 cy=%2234.97%22 r=%220.26%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2259.00%22 cy=%2231.33%22 r=%220.26%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2256.24%22 cy=%226.09%22 r=%220.29%22 fill=%22%2371542F%22 opacity=%220.05%22/%3E%3Ccircle cx=%223.01%22 cy=%2258.76%22 r=%220.54%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2230.58%22 cy=%2234.03%22 r=%220.25%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Ccircle cx=%2250.74%22 cy=%2218.23%22 r=%220.30%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2236.92%22 cy=%2267.18%22 r=%220.28%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2222.68%22 cy=%2214.79%22 r=%220.50%22 fill=%22%2371542F%22 opacity=%220.06%22/%3E%3Ccircle cx=%2294.75%22 cy=%2265.07%22 r=%220.54%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2284.31%22 cy=%2281.92%22 r=%220.47%22 fill=%22%2371542F%22 opacity=%220.06%22/%3E%3Ccircle cx=%2263.90%22 cy=%2295.46%22 r=%220.35%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2210.70%22 cy=%2279.19%22 r=%220.47%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2256.15%22 cy=%2250.54%22 r=%220.52%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2228.08%22 cy=%2283.44%22 r=%220.30%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2240.73%22 cy=%229.76%22 r=%220.36%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2212.99%22 cy=%2260.15%22 r=%220.63%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2253.06%22 cy=%2257.00%22 r=%220.45%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2267.19%22 cy=%2248.89%22 r=%220.55%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%227.11%22 cy=%2213.85%22 r=%220.41%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2266.45%22 cy=%2245.27%22 r=%220.52%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2291.39%22 cy=%2251.38%22 r=%220.36%22 fill=%22%2371542F%22 opacity=%220.12%22/%3E%3Ccircle cx=%2231.98%22 cy=%2271.97%22 r=%220.35%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2261.48%22 cy=%2287.96%22 r=%220.63%22 fill=%22%2371542F%22 opacity=%220.12%22/%3E%3Ccircle cx=%2248.68%22 cy=%2271.34%22 r=%220.55%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2271.18%22 cy=%2236.91%22 r=%220.43%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2213.20%22 cy=%2289.82%22 r=%220.46%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2267.37%22 cy=%2226.74%22 r=%220.29%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2224.18%22 cy=%2217.26%22 r=%220.45%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2289.02%22 cy=%2247.14%22 r=%220.62%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2263.48%22 cy=%2255.02%22 r=%220.31%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Ccircle cx=%2214.38%22 cy=%2278.11%22 r=%220.64%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Ccircle cx=%2283.43%22 cy=%2275.37%22 r=%220.45%22 fill=%22%2371542F%22 opacity=%220.10%22/%3E%3Ccircle cx=%2268.10%22 cy=%2261.70%22 r=%220.44%22 fill=%22%2371542F%22 opacity=%220.09%22/%3E%3Ccircle cx=%2273.62%22 cy=%2210.82%22 r=%220.51%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Ccircle cx=%228.62%22 cy=%2295.66%22 r=%220.60%22 fill=%22%2371542F%22 opacity=%220.08%22/%3E%3Ccircle cx=%2255.63%22 cy=%2240.23%22 r=%220.35%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2291.37%22 cy=%227.12%22 r=%220.44%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2260.82%22 cy=%2290.39%22 r=%220.50%22 fill=%22%2371542F%22 opacity=%220.07%22/%3E%3Ccircle cx=%2293.76%22 cy=%2238.76%22 r=%220.59%22 fill=%22%2371542F%22 opacity=%220.11%22/%3E%3Cpath d=%22M7 13h5m28 36h4m29 25h6%22 stroke=%22%2380643F%22 stroke-width=%22.45%22 opacity=%22.14%22/%3E%3C/pattern%3E%3C/defs%3E%3Crect width=%2296%22 height=%2296%22 fill=%22%23EDE0C5%22/%3E%3Crect width=%2296%22 height=%2296%22 fill=%22url%28%23grain%29%22/%3E%3C/svg%3E"),
+    radial-gradient(120% 95% at 50% 0%, rgba(252, 244, 226, 0.8) 0%, rgba(252, 244, 226, 0) 60%);
+  --canvas-wash-size: 96px 96px, auto;
+  --canvas-grain: 0.3;
+  --bg-panel: #f5e9cf;
+  --bg-panel-hover: #e8d4ad;
+
+  --node-bg: #f8eed8;
+  --node-border: #ac8a55;
+  --node-border-width: 1px;
+  --node-radius: 3px;
+  --root-radius: 4px;
+  --node-shadow: 0 1px 2px rgba(56, 45, 37, 0.14);
+  --node-font-size: 15.5px;
+  --node-font-weight: 500;
+  --node-letter-spacing: 0.005em;
+  --node-pad-y: 13px;
+  --node-pad-x: 24px;
+  --node-mark-w: 3px;
+  --node-mark-h: 62%;
+  --node-mark-radius: 1px;
+  --node-mark-left: 11px;
+
+  --root-bg: #f7ebd2;
+  --root-fg: #382d25;
+  --root-border: #aa7c30;
+
+  --text-primary: #382d25;
+  --text-secondary: #79684e;
+
+  --accent: #8b342d;
+  --accent-soft: #e6d3b4;
+  --sel-ring: 2px;
+
+  --edge: #8c7049;
+  --edge-width: 1.6px;
+  --edge-dash: none;
+
+  --border: #ac8a55;
+  --border-strong: #8c7049;
+  --kbd-border: #ac8a55;
+  --control-fg: #79684e;
+}
+
+/* ───── 동물 마을 — 포근한 크림빛, 발자국 무늬 ───── */
+[data-theme="animal-village"] {
+  --font-sans: "Nunito", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+
+  --bg-canvas: #fff8ed;
+  --canvas-wash:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22%3E%3Cg transform=%22translate%2827 31%29 scale%280.24%29%22%3E%3Cellipse cx=%220%22 cy=%228%22 rx=%2212%22 ry=%2210%22 fill=%22%23F6EBDC%22 stroke=%22none%22 stroke-width=%222%22 /%3E%3Cellipse cx=%22-14%22 cy=%22-5%22 rx=%225%22 ry=%226%22 fill=%22%23F6EBDC%22 stroke=%22none%22 stroke-width=%222%22 /%3E%3Cellipse cx=%22-5%22 cy=%22-13%22 rx=%225%22 ry=%226%22 fill=%22%23F6EBDC%22 stroke=%22none%22 stroke-width=%222%22 /%3E%3Cellipse cx=%226%22 cy=%22-13%22 rx=%225%22 ry=%226%22 fill=%22%23F6EBDC%22 stroke=%22none%22 stroke-width=%222%22 /%3E%3Cellipse cx=%2215%22 cy=%22-5%22 rx=%225%22 ry=%226%22 fill=%22%23F6EBDC%22 stroke=%22none%22 stroke-width=%222%22 /%3E%3C/g%3E%3Ccircle cx=%2282%22 cy=%2288%22 r=%222%22 fill=%22%23F6EBDE%22 stroke=%22none%22 stroke-width=%222%22/%3E%3Cpath d=%22M87 29q-10-2-9-10 9 0 9 10q0-10 8-12 1 9-8 12Z%22 fill=%22%23F1F0E1%22 stroke=%22none%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 /%3E%3C/svg%3E"),
+    radial-gradient(120% 95% at 50% 4%, rgba(255, 253, 246, 0.85) 0%, rgba(255, 253, 246, 0) 62%);
+  --canvas-wash-size: 170px 170px, auto;
+  --canvas-grain: 0;
+  --bg-panel: #fffcf4;
+  --bg-panel-hover: #f6ecdc;
+
+  --node-bg: #fffcf4;
+  --node-border: #dcc3ac;
+  --node-border-width: 1px;
+  --node-radius: 20px;
+  --root-radius: 24px;
+  --node-shadow: 0 2px 7px rgba(90, 68, 62, 0.08);
+  --node-font-size: 15px;
+  --node-font-weight: 600;
+  --node-letter-spacing: 0;
+  --node-pad-y: 12px;
+  --node-pad-x: 22px;
+  --node-mark-w: 6px;
+  --node-mark-h: 6px;
+  --node-mark-radius: 50%;
+  --node-mark-left: 11px;
+
+  --root-bg: #fce2d8;
+  --root-fg: #5a443e;
+  --root-border: #dcc3ac;
+
+  --text-primary: #5a443e;
+  --text-secondary: #8e7569;
+
+  --accent: #d88987;
+  --accent-soft: #fce2d8;
+  --sel-ring: 2.5px;
+
+  --edge: #b4bf9d;
+  --edge-width: 2.6px;
+  --edge-dash: none;
+
+  --border: #dcc3ac;
+  --border-strong: #b4bf9d;
+  --kbd-border: #dcc3ac;
+  --control-fg: #8e7569;
+}
+
+/* ───── 구름 나라 — 보랏빛 하늘, 반짝이 무늬 ───── */
+[data-theme="cloud-kingdom"] {
+  --font-sans: "Nunito", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+
+  --bg-canvas: #f5f2fc;
+  --canvas-wash:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22%3E%3Cpath d=%22M26 21q0 4 4 4q-4 0-4 4q0-4-4-4q4 0 4-4Z%22 fill=%22%23E8E0F4%22 stroke=%22none%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 /%3E%3Ccircle cx=%2285%22 cy=%2281%22 r=%222%22 fill=%22%23E8E0F4%22 stroke=%22none%22 stroke-width=%222%22/%3E%3Cpolygon points=%2294.00%2C26.00 95.13%2C28.45 97.80%2C28.76 95.83%2C30.59 96.35%2C33.24 94.00%2C31.92 91.65%2C33.24 92.17%2C30.59 90.20%2C28.76 92.87%2C28.45%22 fill=%22%23EFE7D9%22 stroke=%22none%22 stroke-width=%221.6%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E"),
+    radial-gradient(110% 90% at 50% 2%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 58%);
+  --canvas-wash-size: 160px 160px, auto;
+  --canvas-grain: 0;
+  --bg-panel: #fdfcff;
+  --bg-panel-hover: #ece6f8;
+
+  --node-bg: #fdfcff;
+  --node-border: #cdc5e5;
+  --node-border-width: 1px;
+  --node-radius: 22px;
+  --root-radius: 26px;
+  --node-shadow: 0 2px 8px rgba(85, 75, 117, 0.08);
+  --node-font-size: 15px;
+  --node-font-weight: 600;
+  --node-letter-spacing: 0;
+  --node-pad-y: 12px;
+  --node-pad-x: 22px;
+  --node-mark-w: 6px;
+  --node-mark-h: 6px;
+  --node-mark-radius: 50%;
+  --node-mark-left: 11px;
+
+  --root-bg: #e8dff7;
+  --root-fg: #554b75;
+  --root-border: #cdc5e5;
+
+  --text-primary: #554b75;
+  --text-secondary: #827797;
+
+  --accent: #9e8cc9;
+  --accent-soft: #e8dff7;
+  --sel-ring: 2.5px;
+
+  --edge: #b6acd7;
+  --edge-width: 2.6px;
+  --edge-dash: none;
+
+  --border: #cdc5e5;
+  --border-strong: #b6acd7;
+  --kbd-border: #cdc5e5;
+  --control-fg: #827797;
+}
+
+/* ───── 디저트 — 딸기빛 크림, 스프링클 무늬 ───── */
+[data-theme="dessert-friends"] {
+  --font-sans: "Nunito", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+
+  --bg-canvas: #fff5f2;
+  --canvas-wash:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22%3E%3Cpath d=%22m21 28 5 3m64 51 4-4%22 fill=%22none%22 stroke=%22%23F1D1D7%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 /%3E%3Ccircle cx=%2285%22 cy=%2224%22 r=%222%22 fill=%22%23EEDAC0%22 stroke=%22none%22 stroke-width=%222%22/%3E%3Ccircle cx=%2231%22 cy=%2291%22 r=%221.5%22 fill=%22%23E1D2EA%22 stroke=%22none%22 stroke-width=%222%22/%3E%3C/svg%3E"),
+    radial-gradient(110% 90% at 50% 2%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 58%);
+  --canvas-wash-size: 130px 130px, auto;
+  --canvas-grain: 0;
+  --bg-panel: #fffbfa;
+  --bg-panel-hover: #fbe7e4;
+
+  --node-bg: #fffbfa;
+  --node-border: #e3bec3;
+  --node-border-width: 1px;
+  --node-radius: 22px;
+  --root-radius: 26px;
+  --node-shadow: 0 2px 8px rgba(104, 72, 81, 0.08);
+  --node-font-size: 15px;
+  --node-font-weight: 600;
+  --node-letter-spacing: 0;
+  --node-pad-y: 12px;
+  --node-pad-x: 22px;
+  --node-mark-w: 6px;
+  --node-mark-h: 6px;
+  --node-mark-radius: 50%;
+  --node-mark-left: 11px;
+
+  --root-bg: #fbe0e5;
+  --root-fg: #684851;
+  --root-border: #e3bec3;
+
+  --text-primary: #684851;
+  --text-secondary: #97747e;
+
+  --accent: #d2768d;
+  --accent-soft: #fbe0e5;
+  --sel-ring: 2.5px;
+
+  --edge: #d5a2b0;
+  --edge-width: 2.6px;
+  --edge-dash: none;
+
+  --border: #e3bec3;
+  --border-strong: #d5a2b0;
+  --kbd-border: #e3bec3;
+  --control-fg: #97747e;
+}
+
+/* ───── 우주 탐험 — 깊은 남색 밤, 별무리 ───── */
+[data-theme="space-explorers"] {
+  --font-sans: "Nunito", "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+
+  --bg-canvas: #1d2543;
+  --canvas-wash:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22%3E%3Cpolygon points=%2222.00%2C22.00 22.85%2C23.84 24.85%2C24.07 23.37%2C25.44 23.76%2C27.43 22.00%2C26.44 20.24%2C27.43 20.63%2C25.44 19.15%2C24.07 21.15%2C23.84%22 fill=%22%235E6B96%22 stroke=%22none%22 stroke-width=%221.6%22 stroke-linejoin=%22round%22/%3E%3Ccircle cx=%2285%22 cy=%2287%22 r=%221%22 fill=%22%237B87AC%22 stroke=%22none%22 stroke-width=%222%22/%3E%3Ccircle cx=%2265%22 cy=%2237%22 r=%220.9%22 fill=%22%235E6B96%22 stroke=%22none%22 stroke-width=%222%22/%3E%3Cpath d=%22M99 12q0 3 3 3q-3 0-3 3q0-3-3-3q3 0 3-3Z%22 fill=%22%23575E86%22 stroke=%22none%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 /%3E%3C/svg%3E"),
+    radial-gradient(95% 70% at 50% 34%, rgba(187, 167, 236, 0.1) 0%, rgba(187, 167, 236, 0) 62%),
+    radial-gradient(130% 100% at 50% 40%, rgba(40, 50, 88, 0.55) 0%, rgba(13, 17, 33, 0.5) 100%);
+  --canvas-wash-size: 150px 150px, auto;
+  --canvas-grain: 0;
+  --bg-panel: #262f52;
+  --bg-panel-hover: #343e64;
+
+  --node-bg: #343e64;
+  --node-border: #596388;
+  --node-border-width: 1px;
+  --node-radius: 22px;
+  --root-radius: 26px;
+  --node-shadow: 0 2px 10px rgba(6, 9, 20, 0.45);
+  --node-font-size: 15px;
+  --node-font-weight: 600;
+  --node-letter-spacing: 0;
+  --node-pad-y: 12px;
+  --node-pad-x: 22px;
+  --node-mark-w: 6px;
+  --node-mark-h: 6px;
+  --node-mark-radius: 50%;
+  --node-mark-left: 11px;
+
+  --root-bg: #3c365c;
+  --root-fg: #eff1ff;
+  --root-border: #596388;
+
+  --text-primary: #eff1ff;
+  --text-secondary: #b1b9db;
+
+  --accent: #bba7ec;
+  --accent-soft: #3c365c;
+  --sel-ring: 2.5px;
+
+  --edge: #6576a3;
+  --edge-width: 2.6px;
+  --edge-dash: none;
+
+  --border: #596388;
+  --border-strong: #6576a3;
+  --kbd-border: #596388;
+  --control-fg: #b1b9db;
 }

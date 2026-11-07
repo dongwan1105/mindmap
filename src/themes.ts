@@ -1,4 +1,14 @@
-export type ThemeId = "paper" | "midnight" | "note" | "modern-light" | "modern-dark";
+export type ThemeId =
+  | "paper"
+  | "midnight"
+  | "note"
+  | "modern-light"
+  | "modern-dark"
+  | "scriptorium"
+  | "animal-village"
+  | "cloud-kingdom"
+  | "dessert-friends"
+  | "space-explorers";
 
 export interface ThemeDef {
   id: ThemeId;
@@ -25,6 +35,38 @@ export const THEMES: ThemeDef[] = [
     name: "모던 다크",
     edgeType: "default",
     swatch: ["#0D1424", "#172237", "#78A5FF"],
+  },
+  // The Scriptorium — 양피지와 잉크. 붉은 루브릭 띠가 특징
+  {
+    id: "scriptorium",
+    name: "고문서",
+    edgeType: "default",
+    swatch: ["#EDE0C5", "#F5E9CF", "#8B342D"],
+  },
+  // Little Worlds 4종 — 둥근 카드, 굵고 둥근 연결선, 무늬 배경
+  {
+    id: "animal-village",
+    name: "동물 마을",
+    edgeType: "default",
+    swatch: ["#FFF8ED", "#FCE2D8", "#D88987"],
+  },
+  {
+    id: "cloud-kingdom",
+    name: "구름 나라",
+    edgeType: "default",
+    swatch: ["#F5F2FC", "#E8DFF7", "#9E8CC9"],
+  },
+  {
+    id: "dessert-friends",
+    name: "디저트",
+    edgeType: "default",
+    swatch: ["#FFF5F2", "#FBE0E5", "#D2768D"],
+  },
+  {
+    id: "space-explorers",
+    name: "우주 탐험",
+    edgeType: "default",
+    swatch: ["#1D2543", "#343E64", "#BBA7EC"],
   },
 ];
 
