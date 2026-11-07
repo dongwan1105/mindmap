@@ -457,22 +457,24 @@ button {
   flex: none;
   width: 24px;
   height: 22px;
-  border-radius: 4px;
+  border-radius: 5px;
   border: 1px solid var(--border);
   background: transparent;
+  /* 꺼진 상태: 연하고 가늘게 */
   color: var(--text-secondary);
-  font-weight: 700;
-  font-size: 12px;
+  font-weight: 400;
+  font-size: 13px;
   line-height: 1;
   padding: 0;
   cursor: pointer;
 }
 
 .bold-btn--on {
-  /* 색이 아니라 눌린 상태로 보이게 — 색상 선택처럼 읽히면 안 된다 */
-  background: var(--text-primary);
-  border-color: var(--text-primary);
-  color: var(--bg-panel);
+  /* 켜진 상태: 배경을 칠하지 않고 글자 자체를 굵고 진하게 — 볼드체 그대로 */
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  font-weight: 800;
 }
 
 /* ---------- 로그인 화면 ---------- */
