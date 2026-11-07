@@ -871,3 +871,30 @@ button {
   opacity: 0.4;
   cursor: default;
 }
+
+/* ---------- 목록 순서 바꾸기 ---------- */
+.map-item__handle {
+  flex: none;
+  width: 18px;
+  text-align: center;
+  color: var(--text-secondary);
+  opacity: 0.45;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.map-item__handle:hover {
+  opacity: 1;
+}
+
+.map-item__handle:active {
+  cursor: grabbing;
+}
+
+.map-item--dragging {
+  opacity: 0.6;
+  background: var(--bg-panel-hover);
+}

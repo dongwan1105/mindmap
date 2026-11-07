@@ -24,6 +24,8 @@ interface MapState {
   createMap: (title?: string) => void;
   deleteMap: (id: string) => void;
   renameMap: (id: string, title: string) => void;
+  /** 목록에 보이는 순서대로 맵 순서를 다시 매긴다 */
+  reorderMaps: (orderedIds: string[]) => void;
   selectMap: (id: string) => void;
 
   selectNode: (id: string | null) => void;
@@ -126,7 +128,16 @@ export const useMapStore = create<MapState>((set, get) => {
     createMap(title = "새 마인드맵") {
       const mapId = nanoid();
       const t = now();
-      const map: MindMap = { id: mapId, title, createdAt: t, updatedAt: t, deletedAt: null };
+      // 새 맵은 목록 맨 위로
+      const minOrder = get().maps.reduce((m, x) => Math.min(m, x.order), 0);
+      const map: MindMap = {
+        id: mapId,
+        title,
+        order: minOrder - 1,
+        createdAt: t,
+        updatedAt: t,
+        deletedAt: null,
+      };
       const root: MindNode = {
         id: nanoid(),
         mapId,
@@ -171,6 +182,18 @@ export const useMapStore = create<MapState>((set, get) => {
     renameMap(id, title) {
       set((s) => ({
         maps: s.maps.map((m) => (m.id === id ? { ...m, title, updatedAt: now() } : m)),
+      }));
+      persist();
+    },
+
+    reorderMaps(orderedIds) {
+      const t = now();
+      const rank = new Map(orderedIds.map((id, i) => [id, i]));
+      set((s) => ({
+        maps: s.maps.map((m) => {
+          const r = rank.get(m.id);
+          return r === undefined || m.order === r ? m : { ...m, order: r, updatedAt: t };
+        }),
       }));
       persist();
     },

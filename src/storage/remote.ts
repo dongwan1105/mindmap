@@ -7,6 +7,7 @@ type MapRow = {
   id: string;
   user_id: string;
   title: string;
+  sort_order: number | null;
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
@@ -33,6 +34,7 @@ type NodeRow = {
 export const rowToMap = (r: MapRow): MindMap => ({
   id: r.id,
   title: r.title,
+  order: r.sort_order ?? 0,
   createdAt: Number(r.created_at),
   updatedAt: Number(r.updated_at),
   deletedAt: r.deleted_at === null ? null : Number(r.deleted_at),
@@ -41,7 +43,8 @@ export const rowToMap = (r: MapRow): MindMap => ({
 export const mapToRow = (m: MindMap, userId: string): MapRow => ({
   id: m.id,
   user_id: userId,
-  title: m.title,
+  title: m.title ?? "",
+  sort_order: m.order ?? 0,
   created_at: m.createdAt,
   updated_at: m.updatedAt,
   deleted_at: m.deletedAt,

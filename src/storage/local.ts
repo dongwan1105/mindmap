@@ -35,10 +35,21 @@ function normalize(n: Partial<MindNode>): MindNode {
   };
 }
 
+function normalizeMap(m: Partial<MindMap>): MindMap {
+  return {
+    id: m.id!,
+    title: m.title ?? "",
+    order: m.order ?? 0,
+    createdAt: m.createdAt ?? Date.now(),
+    updatedAt: m.updatedAt ?? Date.now(),
+    deletedAt: m.deletedAt ?? null,
+  };
+}
+
 export const localStorageAdapter: StorageAdapter = {
   async loadAll() {
     return {
-      maps: read<MindMap>(MAPS_KEY),
+      maps: read<Partial<MindMap>>(MAPS_KEY).filter((m) => m.id).map(normalizeMap),
       nodes: read<Partial<MindNode>>(NODES_KEY).filter((n) => n.id && n.mapId).map(normalize),
     };
   },

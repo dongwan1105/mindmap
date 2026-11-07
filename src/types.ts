@@ -20,6 +20,8 @@ export interface MindNode {
 export interface MindMap {
   id: string;
   title: string;
+  /** 목록에서 직접 정한 순서. 같으면 최근 수정 순으로 정렬한다. */
+  order: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;

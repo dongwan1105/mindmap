@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { useMapStore } from "../store/useMapStore";
 import { THEMES } from "../themes";
 import { signOut, type SyncStatus } from "../sync/useSync";
@@ -29,8 +30,55 @@ export default function Sidebar({
   );
   const allNodes = useMapStore((s) => s.nodes);
   const trashCount = trashEntries(allMaps, allNodes).length;
-  const { createMap, deleteMap, selectMap, setTheme, resetPositions, setTrashOpen } =
+  const { createMap, deleteMap, selectMap, setTheme, resetPositions, setTrashOpen, reorderMaps } =
     useMapStore.getState();
+
+  // 드래그로 순서 바꾸기. 손잡이에서만 시작하므로 항목 탭(선택)과 겹치지 않는다.
+  const listRef = useRef<HTMLDivElement>(null);
+  const draggingId = useRef<string | null>(null);
+  const [liveOrder, setLiveOrder] = useState<string[] | null>(null);
+
+  const sorted = maps
+    .slice()
+    .sort((a, b) => a.order - b.order || b.updatedAt - a.updatedAt);
+  const shown = liveOrder
+    ? (liveOrder.map((id) => sorted.find((m) => m.id === id)!).filter(Boolean) as typeof sorted)
+    : sorted;
+
+  const startDrag = (e: React.PointerEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    draggingId.current = id;
+    setLiveOrder(sorted.map((m) => m.id));
+  };
+
+  const moveDrag = (e: React.PointerEvent) => {
+    const id = draggingId.current;
+    if (!id || !listRef.current) return;
+    const items = Array.from(listRef.current.querySelectorAll(".map-item")) as HTMLElement[];
+    const current = liveOrder ?? sorted.map((m) => m.id);
+    let target = current.length - 1;
+    for (let i = 0; i < items.length; i++) {
+      const r = items[i].getBoundingClientRect();
+      if (e.clientY < r.top + r.height / 2) {
+        target = i;
+        break;
+      }
+    }
+    const from = current.indexOf(id);
+    if (from === -1 || from === target) return;
+    const next = [...current];
+    next.splice(from, 1);
+    next.splice(target, 0, id);
+    setLiveOrder(next);
+  };
+
+  const endDrag = () => {
+    if (draggingId.current && liveOrder) reorderMaps(liveOrder);
+    draggingId.current = null;
+    setLiveOrder(null);
+  };
 
   return (
     <aside className="sidebar">
@@ -49,33 +97,43 @@ export default function Sidebar({
         </button>
       </div>
 
-      <div className="sidebar__list">
-        {maps
-          .slice()
-          .sort((a, b) => b.updatedAt - a.updatedAt)
-          .map((m) => (
-            <div
-              key={m.id}
-              className={`map-item${m.id === currentMapId ? " map-item--active" : ""}`}
-              onClick={() => {
-                selectMap(m.id);
-                setTrashOpen(false);
-                onNavigate?.();
+      <div className="sidebar__list" ref={listRef}>
+        {shown.map((m) => (
+          <div
+            key={m.id}
+            className={`map-item${m.id === currentMapId ? " map-item--active" : ""}${
+              draggingId.current === m.id ? " map-item--dragging" : ""
+            }`}
+            onClick={() => {
+              selectMap(m.id);
+              setTrashOpen(false);
+              onNavigate?.();
+            }}
+          >
+            <span
+              className="map-item__handle"
+              title="끌어서 순서 바꾸기"
+              onPointerDown={(e) => startDrag(e, m.id)}
+              onPointerMove={moveDrag}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+              onClick={(e) => e.stopPropagation()}
+            >
+              ≡
+            </span>
+            <span className="map-item__title">{m.title || "제목 없음"}</span>
+            <button
+              className="map-item__delete"
+              title="삭제"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`"${m.title}" 맵을 삭제할까요?`)) deleteMap(m.id);
               }}
             >
-              <span className="map-item__title">{m.title || "제목 없음"}</span>
-              <button
-                className="map-item__delete"
-                title="삭제"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm(`"${m.title}" 맵을 삭제할까요?`)) deleteMap(m.id);
-                }}
-              >
-                ×
-              </button>
-            </div>
-          ))}
+              ×
+            </button>
+          </div>
+        ))}
       </div>
 
       <div className="sidebar__section">
