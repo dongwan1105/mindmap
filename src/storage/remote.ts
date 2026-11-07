@@ -65,17 +65,18 @@ export const nodeToRow = (n: MindNode, userId: string): NodeRow => ({
   id: n.id,
   map_id: n.mapId,
   user_id: userId,
-  parent_id: n.parentId,
-  text: n.text,
-  sort_order: n.order,
-  collapsed: n.collapsed,
-  color: n.color,
-  bold: n.bold,
-  x: n.x,
-  y: n.y,
+  // NOT NULL 컬럼은 반드시 값을 채운다. 옛 로컬 데이터에 빠진 필드가 있을 수 있다.
+  parent_id: n.parentId ?? null,
+  text: n.text ?? "",
+  sort_order: n.order ?? 0,
+  collapsed: n.collapsed ?? false,
+  color: n.color ?? null,
+  bold: n.bold ?? false,
+  x: n.x ?? null,
+  y: n.y ?? null,
   created_at: 0,
   updated_at: n.updatedAt,
-  deleted_at: n.deletedAt,
+  deleted_at: n.deletedAt ?? null,
 });
 
 export async function isAllowed(): Promise<boolean> {

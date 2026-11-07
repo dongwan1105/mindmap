@@ -54,7 +54,8 @@ export function useSync() {
         dirtyMaps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
         dirtyNodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
         setStatus("synced");
-      } catch {
+      } catch (e) {
+        console.error("[sync] 업로드 실패", e);
         setStatus("error");
       }
     };
@@ -78,7 +79,8 @@ export function useSync() {
         useMapStore.getState().ensureFirstMap();
         await pushDirty();
         setStatus("synced");
-      } catch {
+      } catch (e) {
+        console.error("[sync] 내려받기 실패", e);
         setStatus("error");
         useMapStore.getState().ensureFirstMap();
       }

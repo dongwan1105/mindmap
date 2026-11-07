@@ -96,6 +96,8 @@ export const useMapStore = create<MapState>((set, get) => {
         currentMapId: live[0]?.id ?? null,
         loaded: true,
       });
+      // 옛 형식이 보정됐을 수 있으므로 캐시를 한 번 갱신해 둔다
+      void storage.saveNodes(nodes);
     },
 
     createMap(title = "새 마인드맵") {
