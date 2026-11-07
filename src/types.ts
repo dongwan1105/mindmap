@@ -17,9 +17,21 @@ export interface MindNode {
   deletedAt: number | null;
 }
 
+export interface MindFolder {
+  id: string;
+  name: string;
+  order: number;
+  collapsed: boolean;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number | null;
+}
+
 export interface MindMap {
   id: string;
   title: string;
+  /** 속한 폴더. null이면 폴더 밖(목록 맨 아래) */
+  folderId: string | null;
   /** 목록에서 직접 정한 순서. 같으면 최근 수정 순으로 정렬한다. */
   order: number;
   createdAt: number;

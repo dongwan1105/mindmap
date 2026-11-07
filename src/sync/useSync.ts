@@ -8,6 +8,7 @@ import {
   isAllowed,
   pullAll,
   pushRows,
+  rowToFolder,
   rowToMap,
   rowToNode,
 } from "../storage/remote";
@@ -22,7 +23,11 @@ export type SyncStatus = "idle" | "syncing" | "synced" | "error";
  * 이 값과 로컬의 updatedAt이 다르면 아직 안 올라간 변경(dirty)이다.
  * 서버에서 받은 행도 여기에 기록하므로, 받은 걸 되돌려 보내는 일은 없다.
  */
-const serverHas = { maps: new Map<string, number>(), nodes: new Map<string, number>() };
+const serverHas = {
+  folders: new Map<string, number>(),
+  maps: new Map<string, number>(),
+  nodes: new Map<string, number>(),
+};
 
 /** 로그아웃 직전 남은 변경을 올리기 위해 현재 세션을 모듈 수준에 둔다. */
 let activeSession: Session | null = null;
@@ -30,10 +35,15 @@ let activeSession: Session | null = null;
 /** 아직 서버에 없는 행을 모두 올린다. 올릴 게 없으면 바로 끝난다. */
 /** 영구 삭제된 행을 서버에서도 지운다. */
 async function flushPurge(): Promise<void> {
+  const folders = [...pendingPurge.folders];
   const maps = [...pendingPurge.maps];
   const nodes = [...pendingPurge.nodes];
-  if (!maps.length && !nodes.length) return;
-  await deleteRows(maps, nodes);
+  if (!folders.length && !maps.length && !nodes.length) return;
+  await deleteRows(folders, maps, nodes);
+  folders.forEach((id) => {
+    pendingPurge.folders.delete(id);
+    serverHas.folders.delete(id);
+  });
   maps.forEach((id) => {
     pendingPurge.maps.delete(id);
     serverHas.maps.delete(id);
@@ -47,11 +57,13 @@ async function flushPurge(): Promise<void> {
 async function flushPending(): Promise<void> {
   if (!activeSession) return;
   await flushPurge();
-  const { maps, nodes } = useMapStore.getState();
+  const { folders, maps, nodes } = useMapStore.getState();
+  const dirtyFolders = folders.filter((f) => serverHas.folders.get(f.id) !== f.updatedAt);
   const dirtyMaps = maps.filter((m) => serverHas.maps.get(m.id) !== m.updatedAt);
   const dirtyNodes = nodes.filter((n) => serverHas.nodes.get(n.id) !== n.updatedAt);
-  if (!dirtyMaps.length && !dirtyNodes.length) return;
-  await pushRows(dirtyMaps, dirtyNodes, activeSession.user.id);
+  if (!dirtyFolders.length && !dirtyMaps.length && !dirtyNodes.length) return;
+  await pushRows(dirtyFolders, dirtyMaps, dirtyNodes, activeSession.user.id);
+  dirtyFolders.forEach((f) => serverHas.folders.set(f.id, f.updatedAt));
   dirtyMaps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
   dirtyNodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
 }
@@ -88,15 +100,18 @@ export function useSync() {
     const pushDirty = async () => {
       const session = sessionRef.current;
       if (!session) return;
-      const { maps, nodes } = useMapStore.getState();
+      const { folders, maps, nodes } = useMapStore.getState();
+      const dirtyFolders = folders.filter((f) => serverHas.folders.get(f.id) !== f.updatedAt);
       const dirtyMaps = maps.filter((m) => serverHas.maps.get(m.id) !== m.updatedAt);
       const dirtyNodes = nodes.filter((n) => serverHas.nodes.get(n.id) !== n.updatedAt);
-      const hasPurge = pendingPurge.maps.size > 0 || pendingPurge.nodes.size > 0;
-      if (!dirtyMaps.length && !dirtyNodes.length && !hasPurge) return;
+      const hasPurge =
+        pendingPurge.folders.size > 0 || pendingPurge.maps.size > 0 || pendingPurge.nodes.size > 0;
+      if (!dirtyFolders.length && !dirtyMaps.length && !dirtyNodes.length && !hasPurge) return;
       setStatus("syncing");
       try {
         await flushPurge();
-        await pushRows(dirtyMaps, dirtyNodes, session.user.id);
+        await pushRows(dirtyFolders, dirtyMaps, dirtyNodes, session.user.id);
+        dirtyFolders.forEach((f) => serverHas.folders.set(f.id, f.updatedAt));
         dirtyMaps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
         dirtyNodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
         setStatus("synced");
@@ -125,17 +140,20 @@ export function useSync() {
         const acked = Number(localStorage.getItem(RESET_ACK_KEY) || 0);
         if (resetAt > acked) {
           useMapStore.getState().clearLocal();
+          serverHas.folders.clear();
           serverHas.maps.clear();
           serverHas.nodes.clear();
+          pendingPurge.folders.clear();
           pendingPurge.maps.clear();
           pendingPurge.nodes.clear();
           localStorage.setItem(RESET_ACK_KEY, String(resetAt));
         }
 
         const remote = await pullAll();
+        remote.folders.forEach((f) => serverHas.folders.set(f.id, f.updatedAt));
         remote.maps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
         remote.nodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
-        useMapStore.getState().mergeRemote(remote.maps, remote.nodes);
+        useMapStore.getState().mergeRemote(remote.folders, remote.maps, remote.nodes);
         useMapStore.getState().ensureFirstMap();
         await pushDirty();
         setStatus("synced");
@@ -157,20 +175,38 @@ export function useSync() {
         .channel("mindmap-sync")
         .on(
           "postgres_changes",
+          { event: "*", schema: "public", table: "mindmap_folders", filter: `user_id=eq.${uid}` },
+          (payload) => {
+            if (payload.eventType === "DELETE") {
+              const id = (payload.old as { id?: string })?.id;
+              if (id) {
+                serverHas.folders.delete(id);
+                useMapStore.getState().removeLocal([id], [], []);
+              }
+              return;
+            }
+            if (!payload.new || !("id" in payload.new)) return;
+            const f = rowToFolder(payload.new as never);
+            serverHas.folders.set(f.id, f.updatedAt);
+            useMapStore.getState().mergeRemote([f], [], []);
+          },
+        )
+        .on(
+          "postgres_changes",
           { event: "*", schema: "public", table: "mindmap_maps", filter: `user_id=eq.${uid}` },
           (payload) => {
             if (payload.eventType === "DELETE") {
               const id = (payload.old as { id?: string })?.id;
               if (id) {
                 serverHas.maps.delete(id);
-                useMapStore.getState().removeLocal([id], []);
+                useMapStore.getState().removeLocal([], [id], []);
               }
               return;
             }
             if (!payload.new || !("id" in payload.new)) return;
             const m = rowToMap(payload.new as never);
             serverHas.maps.set(m.id, m.updatedAt);
-            useMapStore.getState().mergeRemote([m], []);
+            useMapStore.getState().mergeRemote([], [m], []);
           },
         )
         .on(
@@ -181,14 +217,14 @@ export function useSync() {
               const id = (payload.old as { id?: string })?.id;
               if (id) {
                 serverHas.nodes.delete(id);
-                useMapStore.getState().removeLocal([], [id]);
+                useMapStore.getState().removeLocal([], [], [id]);
               }
               return;
             }
             if (!payload.new || !("id" in payload.new)) return;
             const n = rowToNode(payload.new as never);
             serverHas.nodes.set(n.id, n.updatedAt);
-            useMapStore.getState().mergeRemote([], [n]);
+            useMapStore.getState().mergeRemote([], [], [n]);
           },
         )
         .subscribe();

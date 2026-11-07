@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
-import type { MindMap, MindNode } from "../types";
+import type { MindFolder, MindMap, MindNode } from "../types";
 import type { StorageAdapter } from "../storage/types";
 import { localStorageAdapter } from "../storage/local";
 import { DEFAULT_THEME, type ThemeId } from "../themes";
@@ -10,6 +10,7 @@ const THEME_KEY = "mindmap.theme";
 const storage: StorageAdapter = localStorageAdapter;
 
 interface MapState {
+  folders: MindFolder[];
   maps: MindMap[];
   nodes: MindNode[];
   currentMapId: string | null;
@@ -20,6 +21,14 @@ interface MapState {
   loaded: boolean;
 
   load: () => Promise<void>;
+
+  createFolder: (name?: string) => void;
+  renameFolder: (id: string, name: string) => void;
+  deleteFolder: (id: string) => void;
+  toggleFolder: (id: string) => void;
+  /** 맵을 폴더 안/밖으로 옮긴다. beforeMapId 자리 앞에 끼워 넣는다 */
+  moveMapToFolder: (mapId: string, folderId: string | null, beforeMapId?: string | null) => void;
+  reorderFolders: (orderedIds: string[]) => void;
 
   createMap: (title?: string) => void;
   deleteMap: (id: string) => void;
@@ -46,7 +55,7 @@ interface MapState {
   resetPositions: (mapId: string) => void;
 
   /** 서버에서 받은 행을 updatedAt 기준으로 병합한다. 더 오래된 행은 무시. */
-  mergeRemote: (maps: MindMap[], nodes: MindNode[]) => void;
+  mergeRemote: (folders: MindFolder[], maps: MindMap[], nodes: MindNode[]) => void;
   /** 맵이 하나도 없으면 첫 맵을 만든다. */
   ensureFirstMap: () => void;
   /** 로그아웃 시 로컬 캐시를 비운다. */
@@ -60,7 +69,7 @@ interface MapState {
   purgeNode: (id: string) => void;
   emptyTrash: () => void;
   /** 서버에서 영구 삭제된 행을 로컬에서도 없앤다 (다른 기기의 삭제 반영) */
-  removeLocal: (mapIds: string[], nodeIds: string[]) => void;
+  removeLocal: (folderIds: string[], mapIds: string[], nodeIds: string[]) => void;
 
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
@@ -74,7 +83,11 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
  * 영구 삭제된 행의 id. 동기화 모듈이 서버에서 지운 뒤 비운다.
  * soft delete와 달리 업서트로는 표현할 수 없어 따로 모은다.
  */
-export const pendingPurge = { maps: new Set<string>(), nodes: new Set<string>() };
+export const pendingPurge = {
+  folders: new Set<string>(),
+  maps: new Set<string>(),
+  nodes: new Set<string>(),
+};
 
 /** 동기화 모듈이 등록하는 콜백. 로컬 저장이 끝날 때마다 호출된다. */
 let onLocalChange: (() => void) | null = null;
@@ -85,7 +98,8 @@ export function setSyncHook(fn: (() => void) | null) {
 function schedulePersist(get: () => MapState) {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    const { maps, nodes } = get();
+    const { folders, maps, nodes } = get();
+    void storage.saveFolders(folders);
     void storage.saveMaps(maps);
     void storage.saveNodes(nodes);
     onLocalChange?.();
@@ -101,6 +115,7 @@ export const useMapStore = create<MapState>((set, get) => {
     }));
 
   return {
+    folders: [],
     maps: [],
     nodes: [],
     currentMapId: null,
@@ -113,9 +128,10 @@ export const useMapStore = create<MapState>((set, get) => {
 
     async load() {
       if (get().loaded) return; // 두 번 불려도 이미 있는 상태를 덮어쓰지 않는다
-      const { maps, nodes } = await storage.loadAll();
+      const { folders, maps, nodes } = await storage.loadAll();
       const live = maps.filter((m) => !m.deletedAt);
       set({
+        folders,
         maps,
         nodes,
         currentMapId: live[0]?.id ?? null,
@@ -133,6 +149,7 @@ export const useMapStore = create<MapState>((set, get) => {
       const map: MindMap = {
         id: mapId,
         title,
+        folderId: null,
         order: minOrder - 1,
         createdAt: t,
         updatedAt: t,
@@ -163,6 +180,84 @@ export const useMapStore = create<MapState>((set, get) => {
       persist();
     },
 
+    createFolder(name = "새 폴더") {
+      const t = now();
+      const minOrder = get().folders.reduce((m, f) => Math.min(m, f.order), 0);
+      const folder: MindFolder = {
+        id: nanoid(),
+        name,
+        order: minOrder - 1,
+        collapsed: false,
+        createdAt: t,
+        updatedAt: t,
+        deletedAt: null,
+      };
+      set((s) => ({ folders: [...s.folders, folder] }));
+      persist();
+    },
+
+    renameFolder(id, name) {
+      set((s) => ({
+        folders: s.folders.map((f) => (f.id === id ? { ...f, name, updatedAt: now() } : f)),
+      }));
+      persist();
+    },
+
+    deleteFolder(id) {
+      // 폴더만 없애고 안의 맵은 밖으로 꺼낸다 (맵이 같이 사라지면 놀란다)
+      const t = now();
+      set((s) => ({
+        folders: s.folders.map((f) => (f.id === id ? { ...f, deletedAt: t, updatedAt: t } : f)),
+        maps: s.maps.map((m) => (m.folderId === id ? { ...m, folderId: null, updatedAt: t } : m)),
+      }));
+      persist();
+    },
+
+    toggleFolder(id) {
+      set((s) => ({
+        folders: s.folders.map((f) =>
+          f.id === id ? { ...f, collapsed: !f.collapsed, updatedAt: now() } : f,
+        ),
+      }));
+      persist();
+    },
+
+    moveMapToFolder(mapId, folderId, beforeMapId) {
+      const t = now();
+      const { maps } = get();
+      const target = maps.find((m) => m.id === mapId);
+      if (!target) return;
+      const siblings = maps
+        .filter((m) => !m.deletedAt && m.folderId === folderId && m.id !== mapId)
+        .sort((a, b) => a.order - b.order || b.updatedAt - a.updatedAt);
+      const at = beforeMapId ? siblings.findIndex((m) => m.id === beforeMapId) : -1;
+      const ordered = [...siblings];
+      ordered.splice(at === -1 ? ordered.length : at, 0, target);
+      const rank = new Map(ordered.map((m, i) => [m.id, i]));
+      set((s) => ({
+        maps: s.maps.map((m) => {
+          const r = rank.get(m.id);
+          if (r === undefined) return m;
+          const fid = m.id === mapId ? folderId : m.folderId;
+          if (m.order === r && m.folderId === fid) return m;
+          return { ...m, folderId: fid, order: r, updatedAt: t };
+        }),
+      }));
+      persist();
+    },
+
+    reorderFolders(orderedIds) {
+      const t = now();
+      const rank = new Map(orderedIds.map((id, i) => [id, i]));
+      set((s) => ({
+        folders: s.folders.map((f) => {
+          const r = rank.get(f.id);
+          return r === undefined || f.order === r ? f : { ...f, order: r, updatedAt: t };
+        }),
+      }));
+      persist();
+    },
+
     deleteMap(id) {
       const t = now();
       set((s) => {
@@ -180,8 +275,15 @@ export const useMapStore = create<MapState>((set, get) => {
     },
 
     renameMap(id, title) {
+      const t = now();
       set((s) => ({
-        maps: s.maps.map((m) => (m.id === id ? { ...m, title, updatedAt: now() } : m)),
+        maps: s.maps.map((m) => (m.id === id ? { ...m, title, updatedAt: t } : m)),
+        // 제목은 곧 루트 카드의 글자다. 목록에서 고쳐도 캔버스와 어긋나지 않게 같이 바꾼다.
+        nodes: s.nodes.map((n) =>
+          n.mapId === id && n.parentId === null && !n.deletedAt
+            ? { ...n, text: title, updatedAt: t }
+            : n,
+        ),
       }));
       persist();
     },
@@ -415,8 +517,15 @@ export const useMapStore = create<MapState>((set, get) => {
       persist();
     },
 
-    mergeRemote(remoteMaps, remoteNodes) {
+    mergeRemote(remoteFolders, remoteMaps, remoteNodes) {
       set((s) => {
+        const folders = [...s.folders];
+        const folderIdx = new Map(folders.map((f, i) => [f.id, i]));
+        for (const r of remoteFolders) {
+          const i = folderIdx.get(r.id);
+          if (i === undefined) folders.push(r);
+          else if (r.updatedAt > folders[i].updatedAt) folders[i] = r;
+        }
         const maps = [...s.maps];
         const nodes = [...s.nodes];
         const mapIdx = new Map(maps.map((m, i) => [m.id, i]));
@@ -436,13 +545,15 @@ export const useMapStore = create<MapState>((set, get) => {
         const live = maps.filter((m) => !m.deletedAt);
         const stillThere = live.some((m) => m.id === s.currentMapId);
         return {
+          folders,
           maps,
           nodes,
           currentMapId: stillThere ? s.currentMapId : (live[0]?.id ?? null),
         };
       });
       // 서버에서 온 내용도 로컬 캐시에 남긴다 (오프라인 대비)
-      const { maps, nodes } = get();
+      const { folders, maps, nodes } = get();
+      void storage.saveFolders(folders);
       void storage.saveMaps(maps);
       void storage.saveNodes(nodes);
     },
@@ -453,7 +564,15 @@ export const useMapStore = create<MapState>((set, get) => {
     },
 
     clearLocal() {
-      set({ maps: [], nodes: [], currentMapId: null, selectedNodeId: null, editingNodeId: null });
+      set({
+        folders: [],
+        maps: [],
+        nodes: [],
+        currentMapId: null,
+        selectedNodeId: null,
+        editingNodeId: null,
+      });
+      void storage.saveFolders([]);
       void storage.saveMaps([]);
       void storage.saveNodes([]);
     },
@@ -538,32 +657,41 @@ export const useMapStore = create<MapState>((set, get) => {
     },
 
     emptyTrash() {
-      const { maps, nodes } = get();
+      const { folders, maps, nodes } = get();
+      const deadFolders = folders.filter((f) => f.deletedAt !== null).map((f) => f.id);
+      deadFolders.forEach((id) => pendingPurge.folders.add(id));
       const deadMaps = maps.filter((m) => m.deletedAt !== null).map((m) => m.id);
       const deadMapSet = new Set(deadMaps);
       const deadNodes = nodes
         .filter((n) => n.deletedAt !== null || deadMapSet.has(n.mapId))
         .map((n) => n.id);
-      if (!deadMaps.length && !deadNodes.length) return;
+      if (!deadMaps.length && !deadNodes.length && !deadFolders.length) return;
       deadMaps.forEach((id) => pendingPurge.maps.add(id));
       deadNodes.forEach((id) => pendingPurge.nodes.add(id));
       const deadNodeSet = new Set(deadNodes);
+      const deadFolderSet = new Set(deadFolders);
       set((s) => ({
+        folders: s.folders.filter((f) => !deadFolderSet.has(f.id)),
         maps: s.maps.filter((m) => !deadMapSet.has(m.id)),
         nodes: s.nodes.filter((n) => !deadNodeSet.has(n.id)),
       }));
       persist();
     },
 
-    removeLocal(mapIds, nodeIds) {
-      if (!mapIds.length && !nodeIds.length) return;
+    removeLocal(folderIds, mapIds, nodeIds) {
+      if (!folderIds.length && !mapIds.length && !nodeIds.length) return;
+      const f = new Set(folderIds);
       const m = new Set(mapIds);
       const n = new Set(nodeIds);
       set((s) => ({
-        maps: s.maps.filter((x) => !m.has(x.id)),
+        folders: s.folders.filter((x) => !f.has(x.id)),
+        maps: s.maps
+          .filter((x) => !m.has(x.id))
+          .map((x) => (x.folderId && f.has(x.folderId) ? { ...x, folderId: null } : x)),
         nodes: s.nodes.filter((x) => !n.has(x.id) && !m.has(x.mapId)),
       }));
-      const { maps, nodes } = get();
+      const { folders, maps, nodes } = get();
+      void storage.saveFolders(folders);
       void storage.saveMaps(maps);
       void storage.saveNodes(nodes);
     },

@@ -1,6 +1,7 @@
-import type { MindMap, MindNode } from "../types";
+import type { MindFolder, MindMap, MindNode } from "../types";
 import type { StorageAdapter } from "./types";
 
+const FOLDERS_KEY = "mindmap.folders";
 const MAPS_KEY = "mindmap.maps";
 const NODES_KEY = "mindmap.nodes";
 
@@ -35,10 +36,23 @@ function normalize(n: Partial<MindNode>): MindNode {
   };
 }
 
+function normalizeFolder(f: Partial<MindFolder>): MindFolder {
+  return {
+    id: f.id!,
+    name: f.name ?? "",
+    order: f.order ?? 0,
+    collapsed: f.collapsed ?? false,
+    createdAt: f.createdAt ?? Date.now(),
+    updatedAt: f.updatedAt ?? Date.now(),
+    deletedAt: f.deletedAt ?? null,
+  };
+}
+
 function normalizeMap(m: Partial<MindMap>): MindMap {
   return {
     id: m.id!,
     title: m.title ?? "",
+    folderId: m.folderId ?? null,
     order: m.order ?? 0,
     createdAt: m.createdAt ?? Date.now(),
     updatedAt: m.updatedAt ?? Date.now(),
@@ -49,9 +63,13 @@ function normalizeMap(m: Partial<MindMap>): MindMap {
 export const localStorageAdapter: StorageAdapter = {
   async loadAll() {
     return {
+      folders: read<Partial<MindFolder>>(FOLDERS_KEY).filter((f) => f.id).map(normalizeFolder),
       maps: read<Partial<MindMap>>(MAPS_KEY).filter((m) => m.id).map(normalizeMap),
       nodes: read<Partial<MindNode>>(NODES_KEY).filter((n) => n.id && n.mapId).map(normalize),
     };
+  },
+  async saveFolders(folders) {
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
   },
   async saveMaps(maps) {
     localStorage.setItem(MAPS_KEY, JSON.stringify(maps));
