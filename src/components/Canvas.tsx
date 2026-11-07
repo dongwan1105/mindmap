@@ -227,8 +227,21 @@ function CanvasInner() {
         // onPaneClick만 쓰면 눌렀다 뗀 자리가 같을 때만 불려서,
         // 화면을 끌어 옮기면 편집 바가 그대로 남아 있었다.
         const el = e.target as HTMLElement;
-        if (el.closest(".mind-node") || el.closest(".stylebar")) return;
-        if (el.closest(".react-flow__controls")) return;
+        if (el.closest(".mind-node") || el.closest(".react-flow__controls")) return;
+
+        /*
+         * 편집 바는 버튼 사이 빈 틈으로 클릭이 통과한다(뒤 카드를 누를 수 있게).
+         * 그래서 색 버튼을 살짝 빗맞히면 "빈 곳"으로 처리돼 바가 닫혀 버렸다.
+         * 요소가 아니라 바가 차지한 영역으로 판단한다.
+         */
+        const bar = document.querySelector(".stylebar");
+        if (bar) {
+          const r = bar.getBoundingClientRect();
+          const inBar =
+            e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+          if (inBar) return;
+        }
+
         selectNode(null);
         startEditing(null);
       }}
