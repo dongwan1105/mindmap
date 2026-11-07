@@ -86,6 +86,20 @@ export async function isAllowed(): Promise<boolean> {
   return data === true;
 }
 
+/**
+ * 전체 초기화 시점(밀리초). 이 기기가 가진 사본이 이보다 오래되면 버려야 한다.
+ * 기록이 없으면 0.
+ */
+export async function getResetAt(): Promise<number> {
+  if (!supabase) return 0;
+  const { data, error } = await supabase
+    .from("mindmap_resets")
+    .select("reset_at")
+    .maybeSingle();
+  if (error || !data) return 0;
+  return Number((data as { reset_at: number }).reset_at);
+}
+
 export async function pullAll(): Promise<{ maps: MindMap[]; nodes: MindNode[] }> {
   if (!supabase) return { maps: [], nodes: [] };
   const [m, n] = await Promise.all([

@@ -2,7 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel, Session } from "@supabase/supabase-js";
 import { supabase, syncEnabled } from "../supabase";
 import { pendingPurge, setSyncHook, useMapStore } from "../store/useMapStore";
-import { deleteRows, isAllowed, pullAll, pushRows, rowToMap, rowToNode } from "../storage/remote";
+import {
+  deleteRows,
+  getResetAt,
+  isAllowed,
+  pullAll,
+  pushRows,
+  rowToMap,
+  rowToNode,
+} from "../storage/remote";
+
+const RESET_ACK_KEY = "mindmap.resetAck";
 
 export type AuthState = "loading" | "signed-out" | "denied" | "ready";
 export type SyncStatus = "idle" | "syncing" | "synced" | "error";
@@ -109,6 +119,19 @@ export function useSync() {
       setStatus("syncing");
 
       try {
+        // 전체 초기화가 있었다면, 이 기기의 오래된 사본을 먼저 버린다.
+        // 그러지 않으면 지워진 내용이 이 기기에서 다시 올라간다.
+        const resetAt = await getResetAt();
+        const acked = Number(localStorage.getItem(RESET_ACK_KEY) || 0);
+        if (resetAt > acked) {
+          useMapStore.getState().clearLocal();
+          serverHas.maps.clear();
+          serverHas.nodes.clear();
+          pendingPurge.maps.clear();
+          pendingPurge.nodes.clear();
+          localStorage.setItem(RESET_ACK_KEY, String(resetAt));
+        }
+
         const remote = await pullAll();
         remote.maps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
         remote.nodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
