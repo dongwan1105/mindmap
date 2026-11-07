@@ -1312,3 +1312,46 @@ button {
   border-top: 1px solid var(--rule-line);
   border-bottom: 1px solid var(--rule-line);
 }
+
+/* ---------- 고문서 — 중심 노드의 팔각 명판과 귀퉁이 넝쿨 ---------- */
+/* border-image 는 네 귀퉁이를 원래 크기로 두고 변만 늘린다. 카드가 넓어져도
+   넝쿨 장식이 찌그러지지 않는 건 이 덕분이다. 안쪽을 채우지 않으므로(fill 없음)
+   카드 색을 바꾸면 그 색이 그대로 비친다. */
+[data-theme="scriptorium"] .mind-node--root {
+  border-style: solid;
+  border-width: 14px;
+  border-color: transparent;
+  border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Cpath d='M12 1H60L71 12V60L60 71H12L1 60V12Z' fill='none' stroke='%238E6D39' stroke-width='1.5'/%3E%3Cpath d='M16 9H56L63 16V56L56 63H16L9 56V16Z' fill='none' stroke='%23B1935E' stroke-width='0.7'/%3E%3Cg transform='translate%280 0%29 scale%281 1%29'%3E%3Cg transform='translate%2812 12%29 scale%280.54%29' fill='none' stroke='%23AA7C30' stroke-width='2.4'%3E%3Cpath d='M0 26V0h26M5 22V5h17M0 14c12 0 14-2 14-14'/%3E%3Cpath d='M18 10c3-7 7-7 10-7-1 6-4 9-10 7ZM10 18c-7 3-7 7-7 10 6-1 9-4 7-10Z' fill='%23AA7C30' stroke='none'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate%2872 0%29 scale%28-1 1%29'%3E%3Cg transform='translate%2812 12%29 scale%280.54%29' fill='none' stroke='%23AA7C30' stroke-width='2.4'%3E%3Cpath d='M0 26V0h26M5 22V5h17M0 14c12 0 14-2 14-14'/%3E%3Cpath d='M18 10c3-7 7-7 10-7-1 6-4 9-10 7ZM10 18c-7 3-7 7-7 10 6-1 9-4 7-10Z' fill='%23AA7C30' stroke='none'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate%280 72%29 scale%281 -1%29'%3E%3Cg transform='translate%2812 12%29 scale%280.54%29' fill='none' stroke='%23AA7C30' stroke-width='2.4'%3E%3Cpath d='M0 26V0h26M5 22V5h17M0 14c12 0 14-2 14-14'/%3E%3Cpath d='M18 10c3-7 7-7 10-7-1 6-4 9-10 7ZM10 18c-7 3-7 7-7 10 6-1 9-4 7-10Z' fill='%23AA7C30' stroke='none'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate%2872 72%29 scale%28-1 -1%29'%3E%3Cg transform='translate%2812 12%29 scale%280.54%29' fill='none' stroke='%23AA7C30' stroke-width='2.4'%3E%3Cpath d='M0 26V0h26M5 22V5h17M0 14c12 0 14-2 14-14'/%3E%3Cpath d='M18 10c3-7 7-7 10-7-1 6-4 9-10 7ZM10 18c-7 3-7 7-7 10 6-1 9-4 7-10Z' fill='%23AA7C30' stroke='none'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  border-image-slice: 26;
+  border-image-width: 26px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  /* 바탕도 같은 팔각으로 잘라 테두리 밖으로 삐져나오지 않게 */
+  clip-path: polygon(
+    12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px),
+    calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px
+  );
+  box-shadow: none; /* clip-path 바깥은 잘리므로 그림자는 의미가 없다 */
+  /* 주의: clip-path 는 자식까지 자른다. 접기 버튼을 테두리 밖으로 내보내면
+     반쪽이 잘리므로, 액자 안쪽에 두는 편이 낫다. */
+}
+
+/* ---------- 고문서 — 루브릭 띠와 양 끝의 마름모 ---------- */
+/* 원본은 2px 붉은 선 양 끝에 마름모가 붙어 있다. 띠와 마름모를 한 요소에
+   담아야 카드 높이가 바뀌어도 끝이 어긋나지 않는다. 루브릭은 붉은 잉크
+   표시라 카드 색을 바꿔도 색을 따라가지 않는다. */
+[data-theme="scriptorium"] .mind-node:not(.mind-node--root)::before {
+  width: 8px;
+  height: 72%;
+  left: 8px;
+  border-radius: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M4 0 8 4 4 8 0 4Z' fill='%238B342D'/%3E%3C/svg%3E") no-repeat top center / 8px 8px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M4 0 8 4 4 8 0 4Z' fill='%238B342D'/%3E%3C/svg%3E") no-repeat bottom center / 8px 8px,
+    linear-gradient(var(--accent), var(--accent)) no-repeat center / 2px calc(100% - 20px);
+}
+
+/* 중심 노드는 액자 장식만으로 충분하다 */
+[data-theme="scriptorium"] .mind-node--root .mind-node__deco {
+  display: none;
+}

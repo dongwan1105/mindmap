@@ -269,9 +269,9 @@
   --node-letter-spacing: 0.005em;
   --node-pad-y: 13px;
   --node-pad-x: 24px;
-  --node-mark-w: 3px;
-  --node-mark-h: 62%;
-  --node-mark-radius: 1px;
+  --node-mark-w: 2px;
+  --node-mark-h: 62%; /* 19%~81% */
+  --node-mark-radius: 0;
   --node-mark-left: 11px;
 
   --root-bg: #f7ebd2;
