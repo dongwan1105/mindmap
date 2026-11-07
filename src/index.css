@@ -932,14 +932,21 @@ button {
 
 .folder-item__caret {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  line-height: 1;
   color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+
+.folder-item__caret--open {
+  transform: rotate(90deg);
+}
+
+.folder-item:hover .folder-item__caret {
+  color: var(--text-primary);
 }
 
 .folder-item__name {
@@ -1006,4 +1013,66 @@ button {
   font-family: inherit;
   font-size: 14px;
   outline: none;
+}
+
+/* ---------- 사용법 ---------- */
+.help {
+  max-width: 640px;
+}
+
+.help__section + .help__section {
+  margin-top: 26px;
+}
+
+.help__heading {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+
+.help__list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-panel);
+}
+
+.help__row {
+  display: flex;
+  gap: 14px;
+  padding: 10px 14px;
+  align-items: baseline;
+}
+
+.help__row + .help__row {
+  border-top: 1px solid var(--border);
+}
+
+.help__key {
+  flex: none;
+  width: 150px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.help__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 720px) {
+  .help__row {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .help__key {
+    width: auto;
+  }
 }

@@ -61,8 +61,9 @@ interface MapState {
   /** 로그아웃 시 로컬 캐시를 비운다. */
   clearLocal: () => void;
 
-  trashOpen: boolean;
-  setTrashOpen: (open: boolean) => void;
+  /** 캔버스 대신 띄울 화면 */
+  panel: "map" | "trash" | "help";
+  setPanel: (panel: "map" | "trash" | "help") => void;
   restoreMap: (id: string) => void;
   restoreNode: (id: string) => void;
   purgeMap: (id: string) => void;
@@ -123,7 +124,7 @@ export const useMapStore = create<MapState>((set, get) => {
     editingNodeId: null,
     editingInitial: null,
     loaded: false,
-    trashOpen: false,
+    panel: "map",
     theme: (localStorage.getItem(THEME_KEY) as ThemeId) || DEFAULT_THEME,
 
     async load() {
@@ -583,8 +584,8 @@ export const useMapStore = create<MapState>((set, get) => {
       void storage.saveNodes([]);
     },
 
-    setTrashOpen(open) {
-      set({ trashOpen: open });
+    setPanel(panel) {
+      set({ panel });
     },
 
     restoreMap(id) {

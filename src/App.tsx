@@ -3,6 +3,7 @@ import Sidebar from "./components/Sidebar";
 import Canvas from "./components/Canvas";
 import Login from "./components/Login";
 import Trash from "./components/Trash";
+import Help from "./components/Help";
 import { useMapStore } from "./store/useMapStore";
 import { useSync } from "./sync/useSync";
 
@@ -10,7 +11,7 @@ export default function App() {
   const loaded = useMapStore((s) => s.loaded);
   const theme = useMapStore((s) => s.theme);
   const load = useMapStore((s) => s.load);
-  const trashOpen = useMapStore((s) => s.trashOpen);
+  const panel = useMapStore((s) => s.panel);
   const [menuOpen, setMenuOpen] = useState(false);
   const { authState, email, status } = useSync();
 
@@ -40,7 +41,7 @@ export default function App() {
         onNavigate={() => setMenuOpen(false)}
       />
       {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
-      {trashOpen ? <Trash /> : <Canvas />}
+      {panel === "trash" ? <Trash /> : panel === "help" ? <Help /> : <Canvas />}
     </div>
   );
 }

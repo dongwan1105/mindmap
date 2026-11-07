@@ -42,7 +42,7 @@ export default function Sidebar({
     selectMap,
     setTheme,
     resetPositions,
-    setTrashOpen,
+    setPanel,
     createFolder,
     renameFolder,
     deleteFolder,
@@ -241,7 +241,7 @@ export default function Sidebar({
             title="폴더 밖에 새 마인드맵"
             onClick={() => {
               createMap();
-              setTrashOpen(false);
+              setPanel("map");
               onNavigate?.();
             }}
           >
@@ -259,7 +259,14 @@ export default function Sidebar({
               className={`folder-item${dropFolder === row.folder.id ? " folder-item--drop" : ""}`}
               onClick={() => toggleFolder(row.folder.id)}
             >
-              <span className="folder-item__caret">{row.folder.collapsed ? "▸" : "▾"}</span>
+              <span
+                className={`folder-item__caret${row.folder.collapsed ? "" : " folder-item__caret--open"}`}
+                aria-hidden="true"
+              >
+                <svg viewBox="0 0 12 12" width="13" height="13">
+                  <path d="M3.5 1.8 L9.2 6 L3.5 10.2 Z" fill="currentColor" />
+                </svg>
+              </span>
               {editing?.kind === "folder" && editing.id === row.folder.id ? (
                 nameInput(row.folder.name)
               ) : (
@@ -280,7 +287,7 @@ export default function Sidebar({
                 onClick={(e) => {
                   e.stopPropagation();
                   createMap(undefined, row.folder.id);
-                  setTrashOpen(false);
+                  setPanel("map");
                   onNavigate?.();
                 }}
               >
@@ -309,7 +316,7 @@ export default function Sidebar({
               }`}
               onClick={() => {
                 selectMap(row.map.id);
-                setTrashOpen(false);
+                setPanel("map");
                 onNavigate?.();
               }}
             >
@@ -386,11 +393,20 @@ export default function Sidebar({
         <button
           className="tool-button"
           onClick={() => {
-            setTrashOpen(true);
+            setPanel("trash");
             onNavigate?.();
           }}
         >
           휴지통{trashCount > 0 ? ` (${trashCount})` : ""}
+        </button>
+        <button
+          className="tool-button"
+          onClick={() => {
+            setPanel("help");
+            onNavigate?.();
+          }}
+        >
+          사용법
         </button>
       </div>
 

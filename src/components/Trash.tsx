@@ -78,7 +78,7 @@ function when(ts: number) {
 export default function Trash() {
   const maps = useMapStore((s) => s.maps);
   const nodes = useMapStore((s) => s.nodes);
-  const { setTrashOpen, restoreMap, restoreNode, purgeMap, purgeNode, emptyTrash } =
+  const { setPanel, restoreMap, restoreNode, purgeMap, purgeNode, emptyTrash } =
     useMapStore.getState();
 
   const entries = trashEntries(maps, nodes);
@@ -103,7 +103,7 @@ export default function Trash() {
               휴지통 비우기
             </button>
           )}
-          <button className="trash__close" onClick={() => setTrashOpen(false)}>
+          <button className="trash__close" onClick={() => setPanel("map")}>
             닫기
           </button>
         </div>
@@ -127,7 +127,7 @@ export default function Trash() {
                 onClick={() => {
                   if (e.kind === "map") restoreMap(e.id);
                   else restoreNode(e.id);
-                  setTrashOpen(false);
+                  setPanel("map");
                 }}
               >
                 복원
