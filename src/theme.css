@@ -21,11 +21,9 @@
   --font-sans: "Gowun Dodum", "Apple SD Gothic Neo", sans-serif;
 
   --bg-canvas: #f3efe5;
-/* 바탕 — 따뜻한 종이. 가운데가 살짝 밝고 가장자리로 내려앉는다 */
-  --canvas-wash:
-    radial-gradient(130% 100% at 50% 8%, #faf7f0 0%, rgba(250, 247, 240, 0) 62%),
-    radial-gradient(100% 70% at 50% 100%, rgba(150, 120, 80, 0.07) 0%, rgba(150, 120, 80, 0) 70%);
-  --canvas-grain: 0.55;
+  /* 바탕은 평평한 한 색. 결과 그늘을 덮었더니 가장자리가 눈에 띄게
+     가라앉아(아래쪽 243,239,229 → 224,219,211) 원래대로 되돌렸다.
+     --canvas-wash / --canvas-grain 을 두지 않으면 기본값(none / 0)이 쓰인다. */
   --bg-panel: #fbf9f4;
   --bg-panel-hover: #f0ece1;
 
