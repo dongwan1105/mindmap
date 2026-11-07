@@ -82,9 +82,10 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
     .join(" ");
 
   const style = {
-    color: node.color ?? undefined,
     fontWeight: node.bold ? 700 : undefined,
-    ...cardStyle(node.bg),
+    ...cardStyle(node.bg, isRoot),
+    // 글자색을 직접 고른 경우에는 그쪽이 우선
+    ...(node.color ? { color: node.color } : {}),
   };
 
   return (
