@@ -1,5 +1,18 @@
 import { useState } from "react";
-import { signInWithGoogle, signInWithPassword, signOut, type AuthState } from "../sync/useSync";
+import {
+  signInWithGoogle,
+  signInWithPassword,
+  signOut,
+  signUpWithPassword,
+  type AuthState,
+} from "../sync/useSync";
+
+/**
+ * 주소 끝에 ?signup 을 붙이면 계정 만들기 화면이 나온다.
+ * 평소 로그인 화면은 깔끔하게 두되, 사람을 추가할 때 코드를 고치지 않아도 되게.
+ * 허용 목록에 없는 메일로 만들면 들어와도 아무것도 보이지 않는다.
+ */
+const SIGNUP_MODE = new URLSearchParams(window.location.search).has("signup");
 import { googleEnabled } from "../supabase";
 
 export default function Login({ state, email }: { state: AuthState; email: string | null }) {
@@ -42,7 +55,8 @@ export default function Login({ state, email }: { state: AuthState; email: strin
     setErr(null);
     setBusy(true);
     try {
-      await signInWithPassword(mail.trim(), pw);
+      if (SIGNUP_MODE) await signUpWithPassword(mail.trim(), pw);
+      else await signInWithPassword(mail.trim(), pw);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "로그인하지 못했습니다");
     } finally {
@@ -54,7 +68,11 @@ export default function Login({ state, email }: { state: AuthState; email: strin
     <div className="gate">
       <div className="gate__card">
         <h1 className="gate__title">마인드맵</h1>
-        <p className="gate__muted">로그인하면 모든 기기에서 같은 내용을 볼 수 있습니다.</p>
+        <p className="gate__muted">
+          {SIGNUP_MODE
+            ? "쓸 메일 주소와 비밀번호를 정해 주세요. 다음부터는 이걸로 로그인합니다."
+            : "로그인하면 모든 기기에서 같은 내용을 볼 수 있습니다."}
+        </p>
 
         <input
           className="gate__input"
@@ -67,7 +85,7 @@ export default function Login({ state, email }: { state: AuthState; email: strin
         <input
           className="gate__input"
           type="password"
-          autoComplete="current-password"
+          autoComplete={SIGNUP_MODE ? "new-password" : "current-password"}
           placeholder="비밀번호 (6자 이상)"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
@@ -77,7 +95,7 @@ export default function Login({ state, email }: { state: AuthState; email: strin
         />
 
         <button className="gate__btn gate__btn--primary" disabled={!ok || busy} onClick={() => void submit()}>
-          {busy ? "잠시만요…" : "로그인"}
+          {busy ? "잠시만요…" : SIGNUP_MODE ? "계정 만들기" : "로그인"}
         </button>
 
         {googleEnabled && (
