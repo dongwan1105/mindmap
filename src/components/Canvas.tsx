@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  applyNodeChanges,
   Background,
   Controls,
   ReactFlow,
   useReactFlow,
   type OnNodeDrag,
+  type OnNodesChange,
   ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useMapStore } from "../store/useMapStore";
 import { layoutTree, type MindFlowNode } from "../layout/tree";
+import { themeById } from "../themes";
 import MindNodeView from "./MindNodeView";
 
 const nodeTypes = { mind: MindNodeView };
@@ -19,13 +22,33 @@ function CanvasInner() {
   const allNodes = useMapStore((s) => s.nodes);
   const selectedNodeId = useMapStore((s) => s.selectedNodeId);
   const editingNodeId = useMapStore((s) => s.editingNodeId);
-  const { addChild, addSibling, deleteNode, toggleCollapse, startEditing, selectNode, moveNode } =
-    useMapStore.getState();
+  const theme = useMapStore((s) => s.theme);
+  const {
+    addChild,
+    addSibling,
+    deleteNode,
+    toggleCollapse,
+    startEditing,
+    selectNode,
+    moveNode,
+    setNodePosition,
+  } = useMapStore.getState();
   const { fitView, getIntersectingNodes } = useReactFlow();
 
-  const { nodes, edges } = useMemo(
-    () => (mapId ? layoutTree(allNodes, mapId) : { nodes: [], edges: [] }),
-    [allNodes, mapId],
+  const edgeType = themeById(theme).edgeType;
+  const layout = useMemo(
+    () => (mapId ? layoutTree(allNodes, mapId, edgeType) : { nodes: [], edges: [] }),
+    [allNodes, mapId, edgeType],
+  );
+  const edges = layout.edges;
+
+  // 드래그 중에는 React Flow가 위치를 직접 움직여야 하므로 로컬 상태를 둔다.
+  // 저장된 트리가 바뀌면 다시 계산된 레이아웃으로 맞춘다.
+  const [nodes, setNodes] = useState(layout.nodes);
+  useEffect(() => setNodes(layout.nodes), [layout.nodes]);
+  const onNodesChange: OnNodesChange<MindFlowNode> = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [],
   );
 
   // 맵이 바뀌면 전체 보기
@@ -71,11 +94,19 @@ function CanvasInner() {
           e.preventDefault();
           navigate(e.key);
           break;
-        default:
-          // 글자를 바로 치면 편집 시작
-          if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
-            startEditing(selectedNodeId);
+        default: {
+          if (e.metaKey || e.ctrlKey || e.altKey) break;
+          // 한글/일본어 IME는 조합 중 key가 "Process"(keyCode 229)로 들어온다.
+          // 이 경우 첫 글자는 넘겨받을 수 없으므로 빈 상태로 편집만 시작한다.
+          const composing = e.isComposing || e.key === "Process" || e.keyCode === 229;
+          if (composing) {
+            startEditing(selectedNodeId, "");
+          } else if (e.key.length === 1) {
+            e.preventDefault();
+            startEditing(selectedNodeId, e.key);
           }
+          break;
+        }
       }
     };
     const navigate = (key: string) => {
@@ -118,12 +149,9 @@ function CanvasInner() {
     (_e, node) => {
       const hit = getIntersectingNodes(node).find((n) => n.id !== node.id);
       if (hit) moveNode(node.id, hit.id);
-      else {
-        // 레이아웃 재계산을 강제하기 위해 상태를 한 번 건드림
-        useMapStore.setState((s) => ({ nodes: [...s.nodes] }));
-      }
+      else setNodePosition(node.id, node.position.x, node.position.y);
     },
-    [getIntersectingNodes, moveNode],
+    [getIntersectingNodes, moveNode, setNodePosition],
   );
 
   if (!mapId) {
@@ -134,6 +162,7 @@ function CanvasInner() {
     <ReactFlow<MindFlowNode>
       nodes={nodes}
       edges={edges}
+      onNodesChange={onNodesChange}
       nodeTypes={nodeTypes}
       onPaneClick={() => {
         selectNode(null);

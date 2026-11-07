@@ -3,6 +3,9 @@ import { nanoid } from "nanoid";
 import type { MindMap, MindNode } from "../types";
 import type { StorageAdapter } from "../storage/types";
 import { localStorageAdapter } from "../storage/local";
+import { DEFAULT_THEME, type ThemeId } from "../themes";
+
+const THEME_KEY = "mindmap.theme";
 
 const storage: StorageAdapter = localStorageAdapter;
 
@@ -12,6 +15,8 @@ interface MapState {
   currentMapId: string | null;
   selectedNodeId: string | null;
   editingNodeId: string | null;
+  /** 글자를 눌러 편집을 시작한 경우 그 첫 글자 */
+  editingInitial: string | null;
   loaded: boolean;
 
   load: () => Promise<void>;
@@ -22,13 +27,18 @@ interface MapState {
   selectMap: (id: string) => void;
 
   selectNode: (id: string | null) => void;
-  startEditing: (id: string | null) => void;
+  startEditing: (id: string | null, initialText?: string) => void;
   updateNodeText: (id: string, text: string) => void;
   addChild: (parentId: string) => string;
   addSibling: (nodeId: string) => string | null;
   deleteNode: (id: string) => void;
   toggleCollapse: (id: string) => void;
   moveNode: (id: string, newParentId: string) => void;
+  setNodePosition: (id: string, x: number, y: number) => void;
+  resetPositions: (mapId: string) => void;
+
+  theme: ThemeId;
+  setTheme: (theme: ThemeId) => void;
 }
 
 const now = () => Date.now();
@@ -57,7 +67,9 @@ export const useMapStore = create<MapState>((set, get) => {
     currentMapId: null,
     selectedNodeId: null,
     editingNodeId: null,
+    editingInitial: null,
     loaded: false,
+    theme: (localStorage.getItem(THEME_KEY) as ThemeId) || DEFAULT_THEME,
 
     async load() {
       const { maps, nodes } = await storage.loadAll();
@@ -83,6 +95,8 @@ export const useMapStore = create<MapState>((set, get) => {
         order: 0,
         collapsed: false,
         color: null,
+        x: null,
+        y: null,
         updatedAt: t,
         deletedAt: null,
       };
@@ -127,8 +141,12 @@ export const useMapStore = create<MapState>((set, get) => {
       set({ selectedNodeId: id });
     },
 
-    startEditing(id) {
-      set({ editingNodeId: id, selectedNodeId: id ?? get().selectedNodeId });
+    startEditing(id, initialText) {
+      set({
+        editingNodeId: id,
+        editingInitial: initialText ?? null,
+        selectedNodeId: id ?? get().selectedNodeId,
+      });
     },
 
     updateNodeText(id, text) {
@@ -155,6 +173,8 @@ export const useMapStore = create<MapState>((set, get) => {
         order: siblings.length,
         collapsed: false,
         color: null,
+        x: null,
+        y: null,
         updatedAt: now(),
         deletedAt: null,
       };
@@ -165,6 +185,7 @@ export const useMapStore = create<MapState>((set, get) => {
         ],
         selectedNodeId: node.id,
         editingNodeId: node.id,
+        editingInitial: null,
       }));
       touchMap(parent.mapId);
       persist();
@@ -186,6 +207,8 @@ export const useMapStore = create<MapState>((set, get) => {
         order: idx + 1,
         collapsed: false,
         color: null,
+        x: null,
+        y: null,
         updatedAt: now(),
         deletedAt: null,
       };
@@ -201,6 +224,7 @@ export const useMapStore = create<MapState>((set, get) => {
         ],
         selectedNodeId: newNode.id,
         editingNodeId: newNode.id,
+        editingInitial: null,
       }));
       touchMap(node.mapId);
       persist();
@@ -250,12 +274,45 @@ export const useMapStore = create<MapState>((set, get) => {
       set((s) => ({
         nodes: s.nodes.map((n) =>
           n.id === id
-            ? { ...n, parentId: newParentId, order: siblings.length, updatedAt: now() }
+            ? {
+                ...n,
+                parentId: newParentId,
+                order: siblings.length,
+                x: null,
+                y: null,
+                updatedAt: now(),
+              }
             : n,
         ),
       }));
       touchMap(node.mapId);
       persist();
+    },
+
+    setNodePosition(id, x, y) {
+      set((s) => ({
+        nodes: s.nodes.map((n) =>
+          n.id === id ? { ...n, x: Math.round(x), y: Math.round(y), updatedAt: now() } : n,
+        ),
+      }));
+      persist();
+    },
+
+    resetPositions(mapId) {
+      const t = now();
+      set((s) => ({
+        nodes: s.nodes.map((n) =>
+          n.mapId === mapId && (n.x !== null || n.y !== null)
+            ? { ...n, x: null, y: null, updatedAt: t }
+            : n,
+        ),
+      }));
+      persist();
+    },
+
+    setTheme(theme) {
+      localStorage.setItem(THEME_KEY, theme);
+      set({ theme });
     },
   };
 });

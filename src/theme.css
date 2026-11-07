@@ -1,49 +1,131 @@
 /*
-  디자인 토큰. 색/폰트/간격/모양은 전부 여기서만 바꾼다.
-  컴포넌트는 이 변수만 참조한다.
+  디자인 토큰. 색 · 폰트 · 모양 · 간격은 전부 여기서만 바꾼다.
+  컴포넌트는 이 변수만 참조하므로, 새 테마는 아래 블록을 하나 더
+  복사해서 값만 바꾸면 된다 (src/themes.ts 에 id도 추가).
 */
+
 :root {
-  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
-
-  --bg-canvas: #f7f6f2;
-  --bg-panel: #ffffff;
-  --bg-node: #ffffff;
-  --bg-node-root: #2b2b2b;
-  --bg-node-selected: #fff7e0;
-
-  --text-primary: #1f1f1f;
-  --text-secondary: #6b6b6b;
-  --text-on-root: #ffffff;
-
-  --border: #e3e1da;
-  --border-strong: #c9c6bc;
-  --accent: #e8a33d;
-  --edge: #b8b5ab;
-
-  --radius-node: 10px;
-  --radius-panel: 12px;
-  --node-pad-y: 8px;
-  --node-pad-x: 14px;
-  --node-font-size: 14px;
+  /* 테마가 건드리지 않는 공통 치수 */
+  --node-pad-y: 9px;
+  --node-pad-x: 15px;
   --node-min-width: 80px;
   --node-max-width: 260px;
-
-  --shadow-node: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --radius-panel: 10px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-canvas: #181818;
-    --bg-panel: #202020;
-    --bg-node: #2a2a2a;
-    --bg-node-root: #f0f0f0;
-    --bg-node-selected: #3a3420;
-    --text-primary: #ececec;
-    --text-secondary: #9a9a9a;
-    --text-on-root: #1a1a1a;
-    --border: #333333;
-    --border-strong: #4a4a4a;
-    --edge: #555555;
-    --shadow-node: none;
-  }
+/* ───────────────── 1. 종이 — 따뜻한 아날로그, 곡선 ───────────────── */
+[data-theme="paper"] {
+  --font-sans: "Gowun Dodum", "Apple SD Gothic Neo", sans-serif;
+
+  --bg-canvas: #f3efe5;
+  --bg-dot: #d8d1c0;
+  --bg-panel: #fbf9f4;
+  --bg-panel-hover: #f0ece1;
+
+  --node-bg: #ffffff;
+  --node-border: #e2dbc9;
+  --node-border-width: 1px;
+  --node-radius: 14px;
+  --node-shadow: 0 1px 3px rgba(90, 75, 45, 0.08);
+  --node-font-size: 14px;
+  --node-font-weight: 400;
+  --node-letter-spacing: 0;
+
+  --root-bg: #3c3831;
+  --root-fg: #faf7f0;
+  --root-border: #3c3831;
+
+  --text-primary: #2f2b25;
+  --text-secondary: #87806f;
+
+  --accent: #c4713f;
+  --accent-soft: #fbf0e6;
+  --sel-ring: 2px;
+
+  --edge: #cdc5b2;
+  --edge-width: 1.6px;
+  --edge-dash: none;
+
+  --border: #e6e0d2;
+  --border-strong: #cdc5b2;
+  --kbd-border: #cdc5b2;
+  --control-fg: #6f6857;
+}
+
+/* ──────────────── 2. 미드나이트 — 어두운 집중, 직선 ──────────────── */
+[data-theme="midnight"] {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+
+  --bg-canvas: #13141b;
+  --bg-dot: #272a36;
+  --bg-panel: #1a1c25;
+  --bg-panel-hover: #242734;
+
+  --node-bg: #242734;
+  --node-border: transparent;
+  --node-border-width: 0px;
+  --node-radius: 20px;
+  --node-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --node-font-size: 14px;
+  --node-font-weight: 500;
+  --node-letter-spacing: -0.01em;
+
+  --root-bg: #6fe9c0;
+  --root-fg: #0e2a22;
+  --root-border: transparent;
+
+  --text-primary: #e6e8f0;
+  --text-secondary: #8b90a3;
+
+  --accent: #6fe9c0;
+  --accent-soft: #1d3a33;
+  --sel-ring: 2px;
+
+  --edge: #3b3f52;
+  --edge-width: 1.4px;
+  --edge-dash: none;
+
+  --border: #2a2d3a;
+  --border-strong: #3b3f52;
+  --kbd-border: #3b3f52;
+  --control-fg: #b9bdcc;
+}
+
+/* ───────────────── 3. 노트 — 흑백 미니멀, 꺾인 선 ───────────────── */
+[data-theme="note"] {
+  --font-sans: "IBM Plex Sans KR", -apple-system, sans-serif;
+
+  --bg-canvas: #ffffff;
+  --bg-dot: #e4e4e4;
+  --bg-panel: #fafafa;
+  --bg-panel-hover: #f0f0f0;
+
+  --node-bg: #ffffff;
+  --node-border: #151515;
+  --node-border-width: 1.5px;
+  --node-radius: 3px;
+  --node-shadow: none;
+  --node-font-size: 13.5px;
+  --node-font-weight: 500;
+  --node-letter-spacing: -0.01em;
+
+  --root-bg: #151515;
+  --root-fg: #ffffff;
+  --root-border: #151515;
+
+  --text-primary: #151515;
+  --text-secondary: #767676;
+
+  --accent: #151515;
+  --accent-soft: #ffe94d;
+  --sel-ring: 3px;
+
+  --edge: #151515;
+  --edge-width: 1.4px;
+  --edge-dash: none;
+
+  --border: #e4e4e4;
+  --border-strong: #151515;
+  --kbd-border: #c9c9c9;
+  --control-fg: #151515;
 }

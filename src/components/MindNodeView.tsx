@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useMapStore } from "../store/useMapStore";
 import type { MindFlowNode } from "../layout/tree";
@@ -21,22 +21,26 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const draftRef = useRef(node.text);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!editing) return;
-    draftRef.current = node.text;
-    // React Flow가 노드 래퍼에 포커스를 주는 것보다 뒤에 실행되도록 한 프레임 미룬다
-    const focus = () => {
-      const el = inputRef.current;
-      if (!el || document.activeElement === el) return;
-      el.value = node.text;
-      el.focus();
-      el.select();
-      autosize(el);
-    };
-    focus();
-    const t = setTimeout(focus, 0);
+    const el = inputRef.current;
+    if (!el) return;
+    // 글자를 눌러 편집을 시작했다면 그 글자로 시작한다 (첫 글자가 사라지지 않게)
+    const initial = useMapStore.getState().editingInitial;
+    const start = initial ?? node.text;
+    draftRef.current = start;
+    el.value = start;
+    el.focus();
+    if (initial === null) el.select();
+    else el.setSelectionRange(start.length, start.length);
+    autosize(el);
+    // React Flow가 포커스를 가져가는 경우를 위한 보정.
+    // 값은 절대 다시 쓰지 않는다 — 이미 입력된 글자가 지워지기 때문.
+    const t = setTimeout(() => {
+      const again = inputRef.current;
+      if (again && document.activeElement !== again) again.focus();
+    }, 0);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing]);
 
   const commit = () => {
@@ -53,6 +57,7 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
     "mind-node",
     isRoot && "mind-node--root",
     selected && "mind-node--selected",
+    node.x !== null && "mind-node--pinned",
   ]
     .filter(Boolean)
     .join(" ");
