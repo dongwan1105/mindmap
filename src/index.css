@@ -340,3 +340,242 @@ button {
   fill: var(--bg-dot);
   stroke: var(--bg-dot);
 }
+
+/* ---------- 카드 안의 + 버튼 ---------- */
+.mind-node__add {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 16px;
+  text-align: center;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.mind-node:hover .mind-node__add,
+.mind-node--selected .mind-node__add {
+  opacity: 1;
+}
+
+.mind-node__add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- 선택된 카드의 스타일 툴바 ---------- */
+.mind-node__toolbar {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
+  white-space: nowrap;
+  z-index: 20;
+  cursor: default;
+}
+
+.swatch {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid rgba(128, 128, 128, 0.45);
+  padding: 0;
+  cursor: pointer;
+}
+
+.swatch--none {
+  background: var(--bg-panel);
+  position: relative;
+}
+
+.swatch--none::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-top: 1px solid var(--text-secondary);
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+
+.swatch--on {
+  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 3px var(--accent);
+}
+
+.mind-node__toolbar-sep {
+  width: 1px;
+  height: 15px;
+  background: var(--border);
+}
+
+.bold-btn {
+  width: 20px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.bold-btn--on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-panel);
+}
+
+/* ---------- 로그인 화면 ---------- */
+.gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--bg-canvas);
+}
+
+.gate__card {
+  width: 320px;
+  padding: 32px 28px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.gate__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.gate__muted {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.gate__btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.gate__btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.gate__btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-panel);
+  font-weight: 500;
+  margin-top: 0;
+}
+
+.gate__btn--primary:hover {
+  opacity: 0.9;
+  color: var(--bg-panel);
+}
+
+.gate__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.gate__or {
+  margin: 18px 0 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gate__input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.gate__input:focus {
+  border-color: var(--accent);
+}
+
+.gate__err {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #e05b4b;
+}
+
+/* ---------- 계정 / 동기화 상태 ---------- */
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.account__mail {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account__out {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11.5px;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.account__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--text-secondary);
+}
+
+.account__dot--synced {
+  background: #45b06a;
+}
+.account__dot--syncing {
+  background: #f0a032;
+}
+.account__dot--error {
+  background: #e05b4b;
+}

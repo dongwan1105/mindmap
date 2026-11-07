@@ -1,11 +1,12 @@
 import { memo, useLayoutEffect, useRef } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useMapStore } from "../store/useMapStore";
+import { TEXT_COLORS } from "../palette";
 import type { MindFlowNode } from "../layout/tree";
 
 /**
- * 노드 하나의 외관. 모양/색은 index.css의 .mind-node 규칙과
- * theme.css 변수로 제어한다. 여기엔 로직만 최소한으로.
+ * 카드 하나의 외관.
+ * 모양·색은 theme.css 변수와 index.css의 .mind-node 규칙이 결정한다.
  */
 function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
   const { node, hasChildren } = data;
@@ -17,6 +18,8 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
   const updateNodeText = useMapStore((s) => s.updateNodeText);
   const toggleCollapse = useMapStore((s) => s.toggleCollapse);
   const deleteNode = useMapStore((s) => s.deleteNode);
+  const addChild = useMapStore((s) => s.addChild);
+  const setNodeStyle = useMapStore((s) => s.setNodeStyle);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const draftRef = useRef(node.text);
@@ -62,10 +65,15 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
     .filter(Boolean)
     .join(" ");
 
+  const textStyle = {
+    color: node.color ?? undefined,
+    fontWeight: node.bold ? 700 : undefined,
+  };
+
   return (
     <div
       className={cls}
-      style={node.color ? { borderColor: node.color } : undefined}
+      style={textStyle}
       onClick={(e) => {
         e.stopPropagation();
         selectNode(id);
@@ -76,6 +84,31 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
       }}
     >
       <Handle type="target" position={Position.Left} />
+
+      {selected && !editing && (
+        <div className="mind-node__toolbar nodrag nowheel" onClick={(e) => e.stopPropagation()}>
+          {TEXT_COLORS.map((c) => (
+            <button
+              key={c.label}
+              className={`swatch${node.color === c.value ? " swatch--on" : ""}${
+                c.value === null ? " swatch--none" : ""
+              }`}
+              style={c.value ? { background: c.value } : undefined}
+              title={c.label}
+              onClick={() => setNodeStyle(id, { color: c.value })}
+            />
+          ))}
+          <span className="mind-node__toolbar-sep" />
+          <button
+            className={`bold-btn${node.bold ? " bold-btn--on" : ""}`}
+            title="굵게 (Ctrl+B)"
+            onClick={() => setNodeStyle(id, { bold: !node.bold })}
+          >
+            B
+          </button>
+        </div>
+      )}
+
       {editing ? (
         <textarea
           ref={inputRef}
@@ -89,7 +122,10 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
           onBlur={commit}
           onKeyDown={(e) => {
             e.stopPropagation();
-            if (e.key === "Enter" && !e.shiftKey) {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+              e.preventDefault();
+              setNodeStyle(id, { bold: !node.bold });
+            } else if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               commit();
             } else if (e.key === "Escape") {
@@ -99,14 +135,16 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
             } else if (e.key === "Tab") {
               e.preventDefault();
               commit();
-              useMapStore.getState().addChild(id);
+              addChild(id);
             }
           }}
         />
       ) : (
         <span>{node.text || "새 노드"}</span>
       )}
+
       <Handle type="source" position={Position.Right} />
+
       {hasChildren && (
         <button
           className="mind-node__toggle nodrag"
@@ -119,6 +157,17 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
           {node.collapsed ? "+" : "–"}
         </button>
       )}
+
+      <button
+        className="mind-node__add nodrag"
+        title="하위 카드 추가 (Tab)"
+        onClick={(e) => {
+          e.stopPropagation();
+          addChild(id);
+        }}
+      >
+        +
+      </button>
     </div>
   );
 }

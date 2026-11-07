@@ -6,6 +6,7 @@ export interface MindNode {
   order: number;
   collapsed: boolean;
   color: string | null;
+  bold: boolean;
   /** 사용자가 직접 옮긴 좌표. null이면 자동 배치 */
   x: number | null;
   y: number | null;

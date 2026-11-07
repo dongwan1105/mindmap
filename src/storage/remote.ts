@@ -1,0 +1,116 @@
+import { supabase } from "../supabase";
+import type { MindMap, MindNode } from "../types";
+
+/** DB는 snake_case, 앱은 camelCase — 변환은 전부 여기서만 한다. */
+
+type MapRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: number;
+  updated_at: number;
+  deleted_at: number | null;
+};
+
+type NodeRow = {
+  id: string;
+  map_id: string;
+  user_id: string;
+  parent_id: string | null;
+  text: string;
+  sort_order: number;
+  collapsed: boolean;
+  color: string | null;
+  bold: boolean;
+  x: number | null;
+  y: number | null;
+  created_at: number;
+  updated_at: number;
+  deleted_at: number | null;
+};
+
+export const rowToMap = (r: MapRow): MindMap => ({
+  id: r.id,
+  title: r.title,
+  createdAt: Number(r.created_at),
+  updatedAt: Number(r.updated_at),
+  deletedAt: r.deleted_at === null ? null : Number(r.deleted_at),
+});
+
+export const mapToRow = (m: MindMap, userId: string): MapRow => ({
+  id: m.id,
+  user_id: userId,
+  title: m.title,
+  created_at: m.createdAt,
+  updated_at: m.updatedAt,
+  deleted_at: m.deletedAt,
+});
+
+export const rowToNode = (r: NodeRow): MindNode => ({
+  id: r.id,
+  mapId: r.map_id,
+  parentId: r.parent_id,
+  text: r.text,
+  order: r.sort_order,
+  collapsed: r.collapsed,
+  color: r.color,
+  bold: r.bold,
+  x: r.x,
+  y: r.y,
+  updatedAt: Number(r.updated_at),
+  deletedAt: r.deleted_at === null ? null : Number(r.deleted_at),
+});
+
+export const nodeToRow = (n: MindNode, userId: string): NodeRow => ({
+  id: n.id,
+  map_id: n.mapId,
+  user_id: userId,
+  parent_id: n.parentId,
+  text: n.text,
+  sort_order: n.order,
+  collapsed: n.collapsed,
+  color: n.color,
+  bold: n.bold,
+  x: n.x,
+  y: n.y,
+  created_at: 0,
+  updated_at: n.updatedAt,
+  deleted_at: n.deletedAt,
+});
+
+export async function isAllowed(): Promise<boolean> {
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc("mindmap_is_allowed");
+  if (error) return false;
+  return data === true;
+}
+
+export async function pullAll(): Promise<{ maps: MindMap[]; nodes: MindNode[] }> {
+  if (!supabase) return { maps: [], nodes: [] };
+  const [m, n] = await Promise.all([
+    supabase.from("mindmap_maps").select("*"),
+    supabase.from("mindmap_nodes").select("*"),
+  ]);
+  if (m.error) throw m.error;
+  if (n.error) throw n.error;
+  return {
+    maps: (m.data as MapRow[]).map(rowToMap),
+    nodes: (n.data as NodeRow[]).map(rowToNode),
+  };
+}
+
+export async function pushRows(maps: MindMap[], nodes: MindNode[], userId: string) {
+  if (!supabase) return;
+  if (maps.length) {
+    const { error } = await supabase
+      .from("mindmap_maps")
+      .upsert(maps.map((m) => mapToRow(m, userId)));
+    if (error) throw error;
+  }
+  // 노드는 한 번에 너무 많이 보내지 않도록 나눠서 올린다
+  for (let i = 0; i < nodes.length; i += 200) {
+    const chunk = nodes.slice(i, i + 200).map((n) => nodeToRow(n, userId));
+    const { error } = await supabase.from("mindmap_nodes").upsert(chunk);
+    if (error) throw error;
+  }
+}

@@ -1,7 +1,21 @@
 import { useMapStore } from "../store/useMapStore";
 import { THEMES } from "../themes";
+import { signOut, type SyncStatus } from "../sync/useSync";
 
-export default function Sidebar() {
+const SYNC_LABEL: Record<SyncStatus, string> = {
+  idle: "로컬 전용",
+  syncing: "동기화 중…",
+  synced: "동기화됨",
+  error: "동기화 실패",
+};
+
+export default function Sidebar({
+  email,
+  syncStatus,
+}: {
+  email: string | null;
+  syncStatus: SyncStatus;
+}) {
   const allMaps = useMapStore((s) => s.maps);
   const maps = allMaps.filter((m) => !m.deletedAt);
   const currentMapId = useMapStore((s) => s.currentMapId);
@@ -75,6 +89,20 @@ export default function Sidebar() {
           자동 정렬로 되돌리기
         </button>
       </div>
+
+      {email && (
+        <div className="sidebar__section">
+          <div className="account">
+            <span className={`account__dot account__dot--${syncStatus}`} title={SYNC_LABEL[syncStatus]} />
+            <span className="account__mail" title={email}>
+              {email}
+            </span>
+            <button className="account__out" onClick={() => void signOut()}>
+              로그아웃
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="sidebar__help">
         <kbd>Tab</kbd> 자식 · <kbd>Enter</kbd> 형제 · <kbd>Space</kbd> 접기 · <kbd>Del</kbd> 삭제

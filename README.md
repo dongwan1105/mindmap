@@ -2,37 +2,56 @@
 
 여러 기기에서 동기화되는 가벼운 마인드맵 앱.
 
+- 배포: https://mindmap-pink-two.vercel.app
+
 ## 스택
 - React + Vite + TypeScript
 - React Flow (캔버스) · Zustand (상태)
-- 저장: localStorage (1단계) → Supabase (2단계 예정)
-- 배포: Vercel
+- Supabase (로그인 · Postgres · Realtime) + localStorage 캐시
+- 배포: Vercel (main push 시 자동 배포)
 
 ## 개발
 ```bash
 npm install
 npm run dev
 ```
+`.env`에 들어 있는 Supabase 키는 브라우저에 공개되는 publishable 키입니다.
+실제 권한은 서버의 RLS 정책이 결정합니다.
 
 ## 구조
 ```
 src/
-  types.ts            데이터 모델 (MindMap, MindNode)
-  theme.css           디자인 토큰 — 색/폰트/간격은 여기서만 수정
-  index.css           레이아웃 및 컴포넌트 스타일
-  storage/            저장 계층 (local.ts → 추후 supabase.ts 추가)
-  store/useMapStore.ts 트리 조작 로직 (추가/삭제/이동/접기)
-  layout/tree.ts      parent_id 트리 → 좌표 자동 배치
-  components/         Sidebar, Canvas, MindNodeView
+  types.ts             데이터 모델 (MindMap, MindNode)
+  themes.ts            테마 목록 (이름, 연결선 모양, 미리보기 색)
+  theme.css            테마별 디자인 토큰 — 색/폰트/모양은 여기서만 수정
+  palette.ts           카드 글자색 팔레트
+  supabase.ts          Supabase 클라이언트
+  storage/             저장 계층 (local.ts = 캐시, remote.ts = Supabase)
+  sync/useSync.ts      로그인 상태 + 기기 간 동기화
+  store/useMapStore.ts 트리 조작 로직
+  layout/tree.ts       parent_id 트리 → 좌표 자동 배치
+  components/          Sidebar, Canvas, MindNodeView, Login
 ```
+
+## 동기화
+- 편집하면 즉시 localStorage에 저장되고, 400ms 뒤 변경된 행만 Supabase에 upsert
+- 다른 기기의 변경은 Realtime 구독으로 들어와 `updatedAt`이 더 최신일 때만 반영
+- 오프라인에서 편집해도 다시 접속하면 올라감
+
+## 접근 제어
+`mindmap_allowed_emails` 테이블에 있는 이메일만 데이터를 읽고 쓸 수 있습니다.
+사람을 추가하려면 그 표에 이메일을 한 줄 넣으면 됩니다.
 
 ## 단축키
 | 키 | 동작 |
 |---|---|
-| Tab | 자식 노드 추가 |
-| Enter | 형제 노드 추가 (편집 중이면 확정) |
-| Space | 접기/펼치기 |
-| Delete / Backspace | 노드 삭제 (자손 포함) |
-| 방향키 | 노드 간 이동 |
-| F2 / 더블클릭 / 글자 입력 | 편집 시작 |
+| Tab | 하위 카드 추가 (카드의 + 버튼과 동일) |
+| Enter | 같은 단계 카드 추가 / 편집 중이면 확정 |
+| Space | 접기 / 펼치기 |
+| Delete | 카드 삭제 (하위 포함) |
+| 방향키 | 카드 간 이동 |
+| Ctrl+B | 굵게 |
+| F2 · 더블클릭 · 글자 입력 | 편집 시작 |
 | Esc | 편집 취소 |
+
+드래그로 카드를 빈 곳에 놓으면 그 자리에 고정되고, 다른 카드 위에 놓으면 그 아래로 옮겨집니다.

@@ -35,7 +35,15 @@ interface MapState {
   toggleCollapse: (id: string) => void;
   moveNode: (id: string, newParentId: string) => void;
   setNodePosition: (id: string, x: number, y: number) => void;
+  setNodeStyle: (id: string, style: { color?: string | null; bold?: boolean }) => void;
   resetPositions: (mapId: string) => void;
+
+  /** 서버에서 받은 행을 updatedAt 기준으로 병합한다. 더 오래된 행은 무시. */
+  mergeRemote: (maps: MindMap[], nodes: MindNode[]) => void;
+  /** 맵이 하나도 없으면 첫 맵을 만든다. */
+  ensureFirstMap: () => void;
+  /** 로그아웃 시 로컬 캐시를 비운다. */
+  clearLocal: () => void;
 
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
@@ -44,12 +52,20 @@ interface MapState {
 const now = () => Date.now();
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** 동기화 모듈이 등록하는 콜백. 로컬 저장이 끝날 때마다 호출된다. */
+let onLocalChange: (() => void) | null = null;
+export function setSyncHook(fn: (() => void) | null) {
+  onLocalChange = fn;
+}
+
 function schedulePersist(get: () => MapState) {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     const { maps, nodes } = get();
     void storage.saveMaps(maps);
     void storage.saveNodes(nodes);
+    onLocalChange?.();
   }, 300);
 }
 
@@ -80,7 +96,6 @@ export const useMapStore = create<MapState>((set, get) => {
         currentMapId: live[0]?.id ?? null,
         loaded: true,
       });
-      if (live.length === 0) get().createMap("내 첫 마인드맵");
     },
 
     createMap(title = "새 마인드맵") {
@@ -95,6 +110,7 @@ export const useMapStore = create<MapState>((set, get) => {
         order: 0,
         collapsed: false,
         color: null,
+        bold: false,
         x: null,
         y: null,
         updatedAt: t,
@@ -173,6 +189,7 @@ export const useMapStore = create<MapState>((set, get) => {
         order: siblings.length,
         collapsed: false,
         color: null,
+        bold: false,
         x: null,
         y: null,
         updatedAt: now(),
@@ -207,6 +224,7 @@ export const useMapStore = create<MapState>((set, get) => {
         order: idx + 1,
         collapsed: false,
         color: null,
+        bold: false,
         x: null,
         y: null,
         updatedAt: now(),
@@ -298,6 +316,16 @@ export const useMapStore = create<MapState>((set, get) => {
       persist();
     },
 
+    setNodeStyle(id, style) {
+      const node = get().nodes.find((n) => n.id === id);
+      if (!node) return;
+      set((s) => ({
+        nodes: s.nodes.map((n) => (n.id === id ? { ...n, ...style, updatedAt: now() } : n)),
+      }));
+      touchMap(node.mapId);
+      persist();
+    },
+
     resetPositions(mapId) {
       const t = now();
       set((s) => ({
@@ -308,6 +336,49 @@ export const useMapStore = create<MapState>((set, get) => {
         ),
       }));
       persist();
+    },
+
+    mergeRemote(remoteMaps, remoteNodes) {
+      set((s) => {
+        const maps = [...s.maps];
+        const nodes = [...s.nodes];
+        const mapIdx = new Map(maps.map((m, i) => [m.id, i]));
+        const nodeIdx = new Map(nodes.map((n, i) => [n.id, i]));
+
+        for (const r of remoteMaps) {
+          const i = mapIdx.get(r.id);
+          if (i === undefined) maps.push(r);
+          else if (r.updatedAt > maps[i].updatedAt) maps[i] = r;
+        }
+        for (const r of remoteNodes) {
+          const i = nodeIdx.get(r.id);
+          if (i === undefined) nodes.push(r);
+          else if (r.updatedAt > nodes[i].updatedAt) nodes[i] = r;
+        }
+
+        const live = maps.filter((m) => !m.deletedAt);
+        const stillThere = live.some((m) => m.id === s.currentMapId);
+        return {
+          maps,
+          nodes,
+          currentMapId: stillThere ? s.currentMapId : (live[0]?.id ?? null),
+        };
+      });
+      // 서버에서 온 내용도 로컬 캐시에 남긴다 (오프라인 대비)
+      const { maps, nodes } = get();
+      void storage.saveMaps(maps);
+      void storage.saveNodes(nodes);
+    },
+
+    ensureFirstMap() {
+      if (get().maps.some((m) => !m.deletedAt)) return;
+      get().createMap("내 첫 마인드맵");
+    },
+
+    clearLocal() {
+      set({ maps: [], nodes: [], currentMapId: null, selectedNodeId: null, editingNodeId: null });
+      void storage.saveMaps([]);
+      void storage.saveNodes([]);
     },
 
     setTheme(theme) {

@@ -95,6 +95,12 @@ function CanvasInner() {
           navigate(e.key);
           break;
         default: {
+          if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+            e.preventDefault();
+            const n = useMapStore.getState().nodes.find((x) => x.id === selectedNodeId);
+            if (n) useMapStore.getState().setNodeStyle(selectedNodeId, { bold: !n.bold });
+            break;
+          }
           if (e.metaKey || e.ctrlKey || e.altKey) break;
           // 한글/일본어 IME는 조합 중 key가 "Process"(keyCode 229)로 들어온다.
           // 이 경우 첫 글자는 넘겨받을 수 없으므로 빈 상태로 편집만 시작한다.
