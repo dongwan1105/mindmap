@@ -14,6 +14,7 @@ import { useMapStore } from "../store/useMapStore";
 import { layoutTree, type MindFlowNode } from "../layout/tree";
 import { themeById } from "../themes";
 import MindNodeView from "./MindNodeView";
+import StyleBar from "./StyleBar";
 
 const nodeTypes = { mind: MindNodeView };
 
@@ -211,6 +212,7 @@ export default function Canvas() {
       <ReactFlowProvider>
         <CanvasInner />
       </ReactFlowProvider>
+      <StyleBar />
     </div>
   );
 }

@@ -371,28 +371,33 @@ button {
   color: var(--accent);
 }
 
-/* ---------- 선택된 카드의 스타일 툴바 ---------- */
-.mind-node__toolbar {
+.stylebar {
   position: absolute;
-  bottom: calc(100% + 9px);
   left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 7px;
+  gap: 8px;
+  padding: 8px 12px;
   background: var(--bg-panel);
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
+  border-radius: 11px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  z-index: 30;
   white-space: nowrap;
-  z-index: 20;
-  cursor: default;
+}
+
+.stylebar__sep {
+  width: 1px;
+  height: 17px;
+  background: var(--border);
 }
 
 .swatch {
-  width: 15px;
-  height: 15px;
+  flex: none;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   border: 1px solid rgba(128, 128, 128, 0.45);
   padding: 0;
@@ -407,7 +412,7 @@ button {
 .swatch--none::after {
   content: "";
   position: absolute;
-  inset: 3px;
+  inset: 4px;
   border-top: 1px solid var(--text-secondary);
   transform: rotate(-45deg);
   transform-origin: center;
@@ -417,15 +422,10 @@ button {
   box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 3px var(--accent);
 }
 
-.mind-node__toolbar-sep {
-  width: 1px;
-  height: 15px;
-  background: var(--border);
-}
-
 .bold-btn {
-  width: 20px;
-  height: 18px;
+  flex: none;
+  width: 24px;
+  height: 22px;
   border-radius: 4px;
   border: 1px solid var(--border);
   background: transparent;

@@ -1,7 +1,6 @@
 import { memo, useLayoutEffect, useRef } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useMapStore } from "../store/useMapStore";
-import { TEXT_COLORS } from "../palette";
 import type { MindFlowNode } from "../layout/tree";
 
 /**
@@ -92,7 +91,10 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
       style={textStyle}
       onClick={(e) => {
         e.stopPropagation();
-        selectNode(id);
+        // 폰에서는 이미 고른 카드를 한 번 더 탭하면 바로 편집된다.
+        // (더블탭은 확대와 겹쳐서 잘 안 먹는다)
+        if (selected && !editing && isTouchDevice()) startEditing(id);
+        else selectNode(id);
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -102,30 +104,6 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
       {/* 좌우 양쪽에 연결점을 둔다. 어느 쪽을 쓸지는 레이아웃이 정한다. */}
       <Handle type="target" position={Position.Left} id="tl" />
       <Handle type="target" position={Position.Right} id="tr" />
-
-      {selected && !editing && (
-        <div className="mind-node__toolbar nodrag nowheel" onClick={(e) => e.stopPropagation()}>
-          {TEXT_COLORS.map((c) => (
-            <button
-              key={c.label}
-              className={`swatch${node.color === c.value ? " swatch--on" : ""}${
-                c.value === null ? " swatch--none" : ""
-              }`}
-              style={c.value ? { background: c.value } : undefined}
-              title={c.label}
-              onClick={() => setNodeStyle(id, { color: c.value })}
-            />
-          ))}
-          <span className="mind-node__toolbar-sep" />
-          <button
-            className={`bold-btn${node.bold ? " bold-btn--on" : ""}`}
-            title="굵게 (Ctrl+B)"
-            onClick={() => setNodeStyle(id, { bold: !node.bold })}
-          >
-            B
-          </button>
-        </div>
-      )}
 
       {editing ? (
         <textarea
@@ -188,6 +166,11 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
       </button>
     </div>
   );
+}
+
+/** 손가락으로 쓰는 기기인지 (마우스 환경에서는 한 번 탭 = 편집을 쓰지 않는다) */
+function isTouchDevice() {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 }
 
 function autosize(el: HTMLTextAreaElement) {
