@@ -46,13 +46,29 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
     return () => clearTimeout(t);
   }, [editing]);
 
+  /**
+   * 편집을 마친다. 내용이 비어 있어도 카드를 지우지 않는다.
+   * (포커스가 풀리는 상황 — 폰에서 키보드가 바뀔 때 등 — 에 만든 카드가
+   *  소리 없이 사라지면 안 되기 때문. 지우려면 Esc나 Del을 쓴다.)
+   */
   const commit = () => {
     const text = draftRef.current.trim();
-    if (text === "" && !isRoot) {
-      deleteNode(id);
-    } else if (text !== node.text) {
-      updateNodeText(id, text || node.text);
+    if (isRoot && text === "") {
+      startEditing(null); // 루트는 비울 수 없다
+      return;
     }
+    if (text !== node.text) updateNodeText(id, text);
+    startEditing(null);
+  };
+
+  /** Esc: 방금 만든 빈 카드면 없던 일로, 아니면 고치던 내용만 되돌린다. */
+  const cancel = () => {
+    if (!isRoot && node.text === "" && draftRef.current.trim() === "") {
+      deleteNode(id);
+      startEditing(null);
+      return;
+    }
+    draftRef.current = node.text;
     startEditing(null);
   };
 
@@ -132,8 +148,7 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
               commit();
             } else if (e.key === "Escape") {
               e.preventDefault();
-              draftRef.current = node.text;
-              commit();
+              cancel();
             } else if (e.key === "Tab") {
               e.preventDefault();
               commit();
