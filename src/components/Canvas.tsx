@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   applyNodeChanges,
   useStore,
-  Background,
   Controls,
   ReactFlow,
   useReactFlow,
@@ -17,36 +16,6 @@ import { themeById } from "../themes";
 import MindNodeView from "./MindNodeView";
 import StyleBar from "./StyleBar";
 
-
-/**
- * 공책처럼 가로 줄만 그리는 바탕.
- * React Flow 의 Background 는 Lines 를 고르면 세로줄까지 함께 그려서
- * 모눈이 되어 버린다. 줄노트 느낌을 내려면 이렇게 직접 그려야 한다.
- */
-function RuledBackground({ gap = 26 }: { gap?: number }) {
-  const [, ty, zoom] = useStore((s) => s.transform);
-  const step = gap * zoom;
-  if (!Number.isFinite(step) || step <= 0) return null;
-  return (
-    <svg className="react-flow__background mind-ruled">
-      <pattern
-        id="mind-ruled"
-        x={0}
-        y={ty % step}
-        width={step}
-        height={step}
-        patternUnits="userSpaceOnUse"
-      >
-        <path
-          d={`M0 ${step / 2} H${step}`}
-          strokeWidth={1}
-          className="react-flow__background-pattern lines"
-        />
-      </pattern>
-      <rect x="0" y="0" width="100%" height="100%" fill="url(#mind-ruled)" />
-    </svg>
-  );
-}
 
 const nodeTypes = { mind: MindNodeView };
 
@@ -288,8 +257,8 @@ function CanvasInner() {
       maxZoom={2}
       proOptions={{ hideAttribution: true }}
     >
-      {themeDef.background === "dots" && <Background gap={24} size={1} />}
-      {themeDef.background === "rules" && <RuledBackground />}
+      {/* 테마마다 다른 바탕(빛·결). 모양은 theme.css 의 --canvas-* 가 정한다. */}
+      <div className="canvas-wash" />
       <Controls showInteractive={false} />
     </ReactFlow>
     <StyleBar />

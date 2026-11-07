@@ -21,7 +21,11 @@
   --font-sans: "Gowun Dodum", "Apple SD Gothic Neo", sans-serif;
 
   --bg-canvas: #f3efe5;
-  --bg-dot: #d8d1c0;
+/* 바탕 — 따뜻한 종이. 가운데가 살짝 밝고 가장자리로 내려앉는다 */
+  --canvas-wash:
+    radial-gradient(130% 100% at 50% 8%, #faf7f0 0%, rgba(250, 247, 240, 0) 62%),
+    radial-gradient(100% 70% at 50% 100%, rgba(150, 120, 80, 0.07) 0%, rgba(150, 120, 80, 0) 70%);
+  --canvas-grain: 0.55;
   --bg-panel: #fbf9f4;
   --bg-panel-hover: #f0ece1;
 
@@ -60,7 +64,11 @@
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
 
   --bg-canvas: #13141b;
-  --bg-dot: #272a36;
+/* 바탕 — 밤하늘. 가운데에 민트빛이 아주 옅게 번진다 */
+  --canvas-wash:
+    radial-gradient(85% 65% at 50% 42%, rgba(111, 233, 192, 0.07) 0%, rgba(111, 233, 192, 0) 65%),
+    radial-gradient(120% 95% at 50% 40%, #1b1d28 0%, #13141b 55%, #0c0d12 100%);
+  --canvas-grain: 0;
   --bg-panel: #1a1c25;
   --bg-panel-hover: #242734;
 
@@ -99,7 +107,11 @@
   --font-sans: "IBM Plex Sans KR", -apple-system, sans-serif;
 
   --bg-canvas: #ffffff;
-  --bg-dot: #e4e4e4;
+/* 바탕 — 갓 뽑은 복사용지. 거의 흰색에 결만 아주 옅게 */
+  --canvas-wash:
+    radial-gradient(120% 100% at 50% 0%, #ffffff 0%, rgba(255, 255, 255, 0) 55%),
+    radial-gradient(135% 110% at 50% 50%, rgba(255, 255, 255, 0) 55%, rgba(120, 126, 136, 0.07) 100%);
+  --canvas-grain: 0.3;
   --bg-panel: #fafafa;
   --bg-panel-hover: #f0f0f0;
 
@@ -138,7 +150,11 @@
   --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
 
   --bg-canvas: #f5f7fb;
-  --bg-dot: #cbd5e4;
+/* 바탕 — 위에서 내려오는 푸른 조명 */
+  --canvas-wash:
+    linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(95% 70% at 50% 108%, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0) 70%);
+  --canvas-grain: 0;
   --bg-panel: #ffffff;
   --bg-panel-hover: #edf3ff;
 
@@ -181,7 +197,11 @@
   --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
 
   --bg-canvas: #0d1424;
-  --bg-dot: #30415b;
+/* 바탕 — 위에서 내려오는 푸른 조명, 아래로 갈수록 깊어진다 */
+  --canvas-wash:
+    radial-gradient(90% 60% at 50% -8%, rgba(120, 165, 255, 0.16) 0%, rgba(120, 165, 255, 0) 68%),
+    linear-gradient(180deg, rgba(23, 34, 55, 0.55) 0%, rgba(13, 20, 36, 0) 45%, rgba(6, 10, 20, 0.6) 100%);
+  --canvas-grain: 0;
   --bg-panel: #172237;
   --bg-panel-hover: #1e3359;
 

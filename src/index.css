@@ -385,10 +385,25 @@ button {
   height: 1px;
 }
 
-/* React Flow 는 패턴 색을 이 변수에서 읽는다. .dots/.lines 규칙이
-   우리 것보다 특이도가 높아, 직접 fill 을 주면 무시된다. */
-.react-flow {
-  --xy-background-pattern-color: var(--bg-dot);
+/* 캔버스 바탕. 격자 대신 테마마다 다른 빛과 결을 깐다.
+   z-index:-1 이라 부모(.react-flow)의 바탕색 위, 노드 아래에 놓인다. */
+.canvas-wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--canvas-wash, none);
+}
+
+/* 종이결. --canvas-grain 이 0 인 테마에서는 보이지 않는다. */
+.canvas-wash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url%28%23g%29'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: var(--canvas-grain, 0);
+  mix-blend-mode: soft-light;
 }
 
 /* ---------- 카드 안의 + 버튼 ---------- */
@@ -1147,13 +1162,4 @@ button {
  */
 [data-theme="note"] .react-flow__edge .react-flow__edge-path {
   shape-rendering: crispEdges;
-}
-
-/* 직접 그리는 줄노트 바탕. React Flow 의 Background 와 같은 자리에 깔린다. */
-.mind-ruled {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
 }
