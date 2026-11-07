@@ -26,6 +26,7 @@ function normalize(n: Partial<MindNode>): MindNode {
     order: n.order ?? 0,
     collapsed: n.collapsed ?? false,
     color: n.color ?? null,
+    bg: n.bg ?? null,
     bold: n.bold ?? false,
     x: n.x ?? null,
     y: n.y ?? null,

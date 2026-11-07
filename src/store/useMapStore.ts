@@ -35,7 +35,12 @@ interface MapState {
   toggleCollapse: (id: string) => void;
   moveNode: (id: string, newParentId: string) => void;
   setNodePosition: (id: string, x: number, y: number) => void;
-  setNodeStyle: (id: string, style: { color?: string | null; bold?: boolean }) => void;
+  setNodeStyle: (
+    id: string,
+    style: { color?: string | null; bg?: string | null; bold?: boolean },
+  ) => void;
+  /** 이 카드의 하위 카드들을 자동 배치로 되돌린다 (직접 옮긴 좌표 해제) */
+  arrangeChildren: (id: string) => void;
   resetPositions: (mapId: string) => void;
 
   /** 서버에서 받은 행을 updatedAt 기준으로 병합한다. 더 오래된 행은 무시. */
@@ -130,6 +135,7 @@ export const useMapStore = create<MapState>((set, get) => {
         order: 0,
         collapsed: false,
         color: null,
+        bg: null,
         bold: false,
         x: null,
         y: null,
@@ -209,6 +215,7 @@ export const useMapStore = create<MapState>((set, get) => {
         order: siblings.length,
         collapsed: false,
         color: null,
+        bg: null,
         bold: false,
         x: null,
         y: null,
@@ -244,6 +251,7 @@ export const useMapStore = create<MapState>((set, get) => {
         order: idx + 1,
         collapsed: false,
         color: null,
+        bg: null,
         bold: false,
         x: null,
         y: null,
@@ -343,6 +351,32 @@ export const useMapStore = create<MapState>((set, get) => {
         nodes: s.nodes.map((n) => (n.id === id ? { ...n, ...style, updatedAt: now() } : n)),
       }));
       touchMap(node.mapId);
+      persist();
+    },
+
+    arrangeChildren(id) {
+      const all = get().nodes;
+      const ids = new Set<string>();
+      let frontier = [id];
+      while (frontier.length) {
+        const next: string[] = [];
+        for (const n of all) {
+          if (!n.deletedAt && n.parentId && frontier.includes(n.parentId) && !ids.has(n.id)) {
+            ids.add(n.id);
+            next.push(n.id);
+          }
+        }
+        frontier = next;
+      }
+      if (!ids.size) return;
+      const t = now();
+      set((s) => ({
+        nodes: s.nodes.map((n) =>
+          ids.has(n.id) && (n.x !== null || n.y !== null)
+            ? { ...n, x: null, y: null, updatedAt: t }
+            : n,
+        ),
+      }));
       persist();
     },
 

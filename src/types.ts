@@ -5,7 +5,10 @@ export interface MindNode {
   text: string;
   order: number;
   collapsed: boolean;
+  /** 글자색 */
   color: string | null;
+  /** 카드 배경색 (연한 채움 + 테두리로 쓰인다) */
+  bg: string | null;
   bold: boolean;
   /** 사용자가 직접 옮긴 좌표. null이면 자동 배치 */
   x: number | null;

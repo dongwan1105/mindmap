@@ -21,6 +21,7 @@ type NodeRow = {
   sort_order: number;
   collapsed: boolean;
   color: string | null;
+  bg: string | null;
   bold: boolean;
   x: number | null;
   y: number | null;
@@ -54,6 +55,7 @@ export const rowToNode = (r: NodeRow): MindNode => ({
   order: r.sort_order,
   collapsed: r.collapsed,
   color: r.color,
+  bg: r.bg ?? null,
   bold: r.bold,
   x: r.x,
   y: r.y,
@@ -71,6 +73,7 @@ export const nodeToRow = (n: MindNode, userId: string): NodeRow => ({
   sort_order: n.order ?? 0,
   collapsed: n.collapsed ?? false,
   color: n.color ?? null,
+  bg: n.bg ?? null,
   bold: n.bold ?? false,
   x: n.x ?? null,
   y: n.y ?? null,

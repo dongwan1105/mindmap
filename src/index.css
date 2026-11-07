@@ -824,3 +824,52 @@ button {
   right: auto;
   left: -10px;
 }
+
+.stylebar {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100vw - 24px);
+}
+
+.stylebar__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-canvas);
+  border-radius: 7px;
+}
+
+.stylebar__tab {
+  padding: 4px 9px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.stylebar__tab--on {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.stylebar__arrange {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.stylebar__arrange:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stylebar__arrange:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

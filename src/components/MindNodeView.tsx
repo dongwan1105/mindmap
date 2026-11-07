@@ -1,6 +1,7 @@
 import { memo, useLayoutEffect, useRef } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useMapStore } from "../store/useMapStore";
+import { cardStyle } from "../palette";
 import type { MindFlowNode } from "../layout/tree";
 
 /**
@@ -80,15 +81,16 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
     .filter(Boolean)
     .join(" ");
 
-  const textStyle = {
+  const style = {
     color: node.color ?? undefined,
     fontWeight: node.bold ? 700 : undefined,
+    ...cardStyle(node.bg),
   };
 
   return (
     <div
       className={cls}
-      style={textStyle}
+      style={style}
       onClick={(e) => {
         e.stopPropagation();
         // 폰에서는 이미 고른 카드를 한 번 더 탭하면 바로 편집된다.
