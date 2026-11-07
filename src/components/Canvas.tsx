@@ -222,7 +222,13 @@ function CanvasInner() {
       edges={edges}
       onNodesChange={onNodesChange}
       nodeTypes={nodeTypes}
-      onPaneClick={() => {
+      onPointerDownCapture={(e) => {
+        // 빈 곳을 누르는 순간 선택을 푼다.
+        // onPaneClick만 쓰면 눌렀다 뗀 자리가 같을 때만 불려서,
+        // 화면을 끌어 옮기면 편집 바가 그대로 남아 있었다.
+        const el = e.target as HTMLElement;
+        if (el.closest(".mind-node") || el.closest(".stylebar")) return;
+        if (el.closest(".react-flow__controls")) return;
         selectNode(null);
         startEditing(null);
       }}

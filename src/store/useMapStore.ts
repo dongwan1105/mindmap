@@ -6,6 +6,7 @@ import { localStorageAdapter } from "../storage/local";
 import { DEFAULT_THEME, type ThemeId } from "../themes";
 
 const THEME_KEY = "mindmap.theme";
+const CURRENT_KEY = "mindmap.currentMapId";
 const NAME_KEY = "mindmap.workspaceName";
 const NAME_AT_KEY = "mindmap.workspaceNameAt";
 
@@ -142,11 +143,13 @@ export const useMapStore = create<MapState>((set, get) => {
       if (get().loaded) return; // 두 번 불려도 이미 있는 상태를 덮어쓰지 않는다
       const { folders, maps, nodes } = await storage.loadAll();
       const live = maps.filter((m) => !m.deletedAt);
+      // 새로고침해도 보던 맵이 그대로 열리게
+      const saved = localStorage.getItem(CURRENT_KEY);
       set({
         folders,
         maps,
         nodes,
-        currentMapId: live[0]?.id ?? null,
+        currentMapId: live.find((m) => m.id === saved)?.id ?? live[0]?.id ?? null,
         loaded: true,
       });
       // 옛 형식이 보정됐을 수 있으므로 캐시를 한 번 갱신해 둔다
@@ -562,11 +565,14 @@ export const useMapStore = create<MapState>((set, get) => {
 
         const live = maps.filter((m) => !m.deletedAt);
         const stillThere = live.some((m) => m.id === s.currentMapId);
+        const saved = localStorage.getItem(CURRENT_KEY);
         return {
           folders,
           maps,
           nodes,
-          currentMapId: stillThere ? s.currentMapId : (live[0]?.id ?? null),
+          currentMapId: stillThere
+            ? s.currentMapId
+            : (live.find((m) => m.id === saved)?.id ?? live[0]?.id ?? null),
         };
       });
       // 서버에서 온 내용도 로컬 캐시에 남긴다 (오프라인 대비)
@@ -726,4 +732,13 @@ export const useMapStore = create<MapState>((set, get) => {
       set({ theme });
     },
   };
+});
+
+/** 보고 있던 맵을 기억해 둔다 (어느 경로로 바뀌든 한 곳에서 처리) */
+let lastCurrent: string | null = null;
+useMapStore.subscribe((s) => {
+  if (s.currentMapId === lastCurrent) return;
+  lastCurrent = s.currentMapId;
+  if (s.currentMapId) localStorage.setItem(CURRENT_KEY, s.currentMapId);
+  else localStorage.removeItem(CURRENT_KEY);
 });
