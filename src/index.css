@@ -138,11 +138,14 @@ button {
 
 .theme-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .theme-chip {
-  flex: 1;
+  /* 한 줄에 3개씩, 넘치면 다음 줄로 */
+  flex: 1 1 calc(33.333% - 4px);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -232,7 +235,9 @@ button {
   color: var(--text-secondary);
 }
 
-.react-flow__edge-path {
+/* React Flow 의 기본 스타일(style.css)이 Canvas.tsx 에서 뒤늦게 로드되므로,
+   같은 특이도로는 --edge-width 가 무시된다. 한 단계 올려서 확실히 이기게 둔다. */
+.react-flow__edge .react-flow__edge-path {
   stroke: var(--edge);
   stroke-width: var(--edge-width);
   stroke-dasharray: var(--edge-dash);
@@ -242,21 +247,23 @@ button {
   display: none;
 }
 
-.react-flow__controls {
+/* 아래 .react-flow__* 규칙들은 전부 한 단계 올려 둔다. React Flow 의 style.css 가
+   Canvas.tsx 에서 늦게 로드되어, 같은 특이도면 테마 변수가 전부 무시된다. */
+.react-flow .react-flow__controls {
   box-shadow: none;
   border: 1px solid var(--border);
   border-radius: 7px;
   overflow: hidden;
 }
 
-.react-flow__controls-button {
+.react-flow .react-flow__controls-button {
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   fill: var(--control-fg);
   color: var(--control-fg);
 }
 
-.react-flow__controls-button:hover {
+.react-flow .react-flow__controls-button:hover {
   background: var(--bg-panel-hover);
 }
 
@@ -284,8 +291,23 @@ button {
   background: var(--root-bg);
   color: var(--root-fg);
   border-color: var(--root-border);
+  border-radius: var(--root-radius);
   font-weight: 600;
   font-size: calc(var(--node-font-size) + 2px);
+}
+
+/* 모던 테마의 왼쪽 색 띠. --node-accent-bar 가 0 인 테마에서는 보이지 않는다.
+   카드 색을 바꾸면 그 색을, 아니면 테마 강조색을 따른다. */
+.mind-node:not(.mind-node--root)::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--node-pad-x) - 9px);
+  top: 20%;
+  bottom: 20%;
+  width: var(--node-accent-bar);
+  border-radius: 2px;
+  background: var(--card-accent, var(--accent));
+  pointer-events: none;
 }
 
 .mind-node--selected {
@@ -830,7 +852,7 @@ button {
     padding: 58px 18px 40px;
   }
 
-  .react-flow__controls {
+  .react-flow .react-flow__controls {
     margin-bottom: max(14px, env(safe-area-inset-bottom));
   }
 
@@ -1122,6 +1144,6 @@ button {
  * 수직·수평뿐이므로 픽셀에 맞춰 그리면 몇 겹이든 한 겹과 똑같이 보인다.
  * (곡선/사선을 쓰는 다른 테마에 적용하면 계단처럼 깨지므로 노트에만 둔다)
  */
-[data-theme="note"] .react-flow__edge-path {
+[data-theme="note"] .react-flow__edge .react-flow__edge-path {
   shape-rendering: crispEdges;
 }

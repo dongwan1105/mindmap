@@ -1,3 +1,5 @@
+import type React from "react";
+
 /** 카드 글자색. 밝은 배경과 어두운 배경 모두에서 읽히는 톤. */
 export const TEXT_COLORS: { value: string | null; label: string }[] = [
   { value: null, label: "기본" },
@@ -42,7 +44,13 @@ function darken(hex: string, amount: number) {
  */
 export function cardStyle(bg: string | null, isRoot = false) {
   if (!bg) return undefined;
-  if (!isRoot) return { background: `${bg}26`, borderColor: bg };
+  // "--card-accent" 는 모던 테마의 왼쪽 띠 색. 띠가 없는 테마에서는 무시된다.
+  if (!isRoot)
+    return {
+      background: `${bg}26`,
+      borderColor: bg,
+      "--card-accent": bg,
+    } as React.CSSProperties;
   // 팔레트 색을 그대로 깔면 흰 글자가 흐려진다(특히 주황·보라).
   // 진하게 깔아 대비를 확보하면서 루트 특유의 묵직한 느낌도 지킨다.
   const deep = darken(bg, 0.42);

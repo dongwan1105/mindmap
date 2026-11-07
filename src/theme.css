@@ -11,6 +11,9 @@
   --node-min-width: 80px;
   --node-max-width: 260px;
   --radius-panel: 10px;
+  /* 테마가 덮어쓸 수 있는 기본값 */
+  --root-radius: var(--node-radius);
+  --node-accent-bar: 0px;
 }
 
 /* ───────────────── 1. 종이 — 따뜻한 아날로그, 곡선 ───────────────── */
@@ -81,7 +84,7 @@
   --accent-soft: #1d3a33;
   --sel-ring: 2px;
 
-  --edge: #3b3f52;
+  --edge: #4c5470; /* 배경 #13141B 에서 선이 거의 안 보여 한 단계 밝힘 */
   --edge-width: 1.4px;
   --edge-dash: none;
 
@@ -128,4 +131,90 @@
   --border-strong: #151515;
   --kbd-border: #c9c9c9;
   --control-fg: #151515;
+}
+
+/* ───── 4. 모던 라이트 — Modern Axis, 곡선 연결선 ───── */
+[data-theme="modern-light"] {
+  --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+
+  --bg-canvas: #f5f7fb;
+  --bg-dot: #cbd5e4;
+  --bg-panel: #ffffff;
+  --bg-panel-hover: #edf3ff;
+
+  --node-bg: #ffffff;
+  --node-border: #dfe5ef;
+  --node-border-width: 1px;
+  --node-radius: 16px;
+  --root-radius: 20px;
+  --node-shadow: 0 2px 8px rgba(23, 36, 59, 0.07);
+  --node-font-size: 14.5px;
+  --node-font-weight: 600;
+  --node-letter-spacing: -0.01em;
+  --node-pad-y: 11px;
+  --node-pad-x: 18px;
+  --node-accent-bar: 3px;
+
+  --root-bg: #2563eb;
+  --root-fg: #ffffff;
+  --root-border: #2563eb;
+
+  --text-primary: #17243b;
+  --text-secondary: #61718c;
+
+  --accent: #2563eb;
+  --accent-soft: #edf3ff;
+  --sel-ring: 2px;
+
+  --edge: #a5b4cc;
+  --edge-width: 2px;
+  --edge-dash: none;
+
+  --border: #dfe5ef;
+  --border-strong: #a5b4cc;
+  --kbd-border: #dfe5ef;
+  --control-fg: #61718c;
+}
+
+/* ───── 5. 모던 다크 — Modern Axis 어두운 모드 ───── */
+[data-theme="modern-dark"] {
+  --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+
+  --bg-canvas: #0d1424;
+  --bg-dot: #30415b;
+  --bg-panel: #172237;
+  --bg-panel-hover: #1e3359;
+
+  --node-bg: #172237;
+  --node-border: #2c3b55;
+  --node-border-width: 1px;
+  --node-radius: 16px;
+  --root-radius: 20px;
+  --node-shadow: 0 2px 10px rgba(0, 0, 0, 0.38);
+  --node-font-size: 14.5px;
+  --node-font-weight: 600;
+  --node-letter-spacing: -0.01em;
+  --node-pad-y: 11px;
+  --node-pad-x: 18px;
+  --node-accent-bar: 3px;
+
+  --root-bg: #2563eb;
+  --root-fg: #ffffff;
+  --root-border: #2563eb;
+
+  --text-primary: #eff4ff;
+  --text-secondary: #a4b2cc;
+
+  --accent: #78a5ff;
+  --accent-soft: #1e3359;
+  --sel-ring: 2px;
+
+  --edge: #526581;
+  --edge-width: 2px;
+  --edge-dash: none;
+
+  --border: #2c3b55;
+  --border-strong: #526581;
+  --kbd-border: #2c3b55;
+  --control-fg: #a4b2cc;
 }
