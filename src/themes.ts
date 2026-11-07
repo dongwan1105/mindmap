@@ -66,7 +66,7 @@ export const THEMES: ThemeDef[] = [
     id: "space-explorers",
     name: "우주 탐험",
     edgeType: "default",
-    swatch: ["#1D2543", "#343E64", "#BBA7EC"],
+    swatch: ["#141A31", "#343E64", "#BBA7EC"],
   },
 ];
 
