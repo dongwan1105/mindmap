@@ -14,6 +14,21 @@ export type SyncStatus = "idle" | "syncing" | "synced" | "error";
  */
 const serverHas = { maps: new Map<string, number>(), nodes: new Map<string, number>() };
 
+/** 로그아웃 직전 남은 변경을 올리기 위해 현재 세션을 모듈 수준에 둔다. */
+let activeSession: Session | null = null;
+
+/** 아직 서버에 없는 행을 모두 올린다. 올릴 게 없으면 바로 끝난다. */
+async function flushPending(): Promise<void> {
+  if (!activeSession) return;
+  const { maps, nodes } = useMapStore.getState();
+  const dirtyMaps = maps.filter((m) => serverHas.maps.get(m.id) !== m.updatedAt);
+  const dirtyNodes = nodes.filter((n) => serverHas.nodes.get(n.id) !== n.updatedAt);
+  if (!dirtyMaps.length && !dirtyNodes.length) return;
+  await pushRows(dirtyMaps, dirtyNodes, activeSession.user.id);
+  dirtyMaps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
+  dirtyNodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
+}
+
 export function useSync() {
   const [authState, setAuthState] = useState<AuthState>(syncEnabled ? "loading" : "ready");
   const [email, setEmail] = useState<string | null>(null);
@@ -62,6 +77,7 @@ export function useSync() {
 
     const start = async (session: Session) => {
       sessionRef.current = session;
+      activeSession = session;
       setEmail(session.user.email ?? null);
 
       if (!(await isAllowed())) {
@@ -126,6 +142,7 @@ export function useSync() {
       } else {
         teardown();
         sessionRef.current = null;
+        activeSession = null;
         setEmail(null);
         setAuthState("signed-out");
         setStatus("idle");
@@ -182,6 +199,22 @@ export async function signUpWithPassword(email: string, password: string) {
 }
 
 export async function signOut() {
-  useMapStore.getState().clearLocal();
+  // 아직 안 올라간 변경이 있으면 먼저 올린다.
+  // 올리지 못하면 로컬 캐시를 지우지 않는다 — 지우면 그 작업은 영영 사라진다.
+  let flushed = true;
+  try {
+    await flushPending();
+  } catch (e) {
+    console.error("[sync] 로그아웃 전 업로드 실패", e);
+    flushed = false;
+  }
+  if (!flushed) {
+    const go = confirm(
+      "아직 서버에 올라가지 않은 변경이 있습니다.\n지금 로그아웃하면 이 기기에는 남지만 다른 기기에서는 볼 수 없습니다.\n\n로그아웃할까요?",
+    );
+    if (!go) return;
+  } else {
+    useMapStore.getState().clearLocal();
+  }
   if (supabase) await supabase.auth.signOut();
 }
