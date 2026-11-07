@@ -613,3 +613,203 @@ button {
 .gate__card .gate__input + .gate__btn--primary {
   margin-top: 12px;
 }
+
+/* ---------- 휴지통 ---------- */
+.tool-button + .tool-button {
+  margin-top: 6px;
+}
+
+.trash {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 26px 40px;
+  background: var(--bg-canvas);
+}
+
+.trash__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.trash__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.trash__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.trash__empty,
+.trash__close {
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: transparent;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.trash__empty:hover {
+  border-color: #e05b4b;
+  color: #e05b4b;
+}
+
+.trash__close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.trash__none {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
+.trash__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 620px;
+}
+
+.trash-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.trash-item + .trash-item {
+  margin-top: 7px;
+}
+
+.trash-item__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.trash-item__label {
+  display: block;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trash-item__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.trash-item__btn {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.trash-item__btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.trash-item__btn--danger:hover {
+  border-color: #e05b4b;
+  color: #e05b4b;
+}
+
+/* ---------- 좁은 화면 (폰) ---------- */
+.app {
+  position: relative;
+}
+
+.menu-btn {
+  display: none;
+}
+
+.scrim {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .menu-btn {
+    display: block;
+    position: absolute;
+    top: max(10px, env(safe-area-inset-top));
+    left: 10px;
+    z-index: 60;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 262px;
+    z-index: 55;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .app--menu .sidebar {
+    transform: none;
+  }
+
+  .scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  /* 메뉴 버튼과 겹치지 않게 */
+  .sidebar__header {
+    padding-left: 58px;
+  }
+
+  .trash {
+    padding: 58px 18px 40px;
+  }
+
+  .react-flow__controls {
+    margin-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+
+  .gate__card {
+    width: min(340px, calc(100vw - 32px));
+  }
+
+  .trash-item {
+    flex-wrap: wrap;
+  }
+
+  .trash-item__main {
+    flex-basis: 100%;
+    margin-bottom: 6px;
+  }
+}

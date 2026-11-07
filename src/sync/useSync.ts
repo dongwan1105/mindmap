@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel, Session } from "@supabase/supabase-js";
 import { supabase, syncEnabled } from "../supabase";
-import { setSyncHook, useMapStore } from "../store/useMapStore";
-import { isAllowed, pullAll, pushRows, rowToMap, rowToNode } from "../storage/remote";
+import { pendingPurge, setSyncHook, useMapStore } from "../store/useMapStore";
+import { deleteRows, isAllowed, pullAll, pushRows, rowToMap, rowToNode } from "../storage/remote";
 
 export type AuthState = "loading" | "signed-out" | "denied" | "ready";
 export type SyncStatus = "idle" | "syncing" | "synced" | "error";
@@ -18,8 +18,25 @@ const serverHas = { maps: new Map<string, number>(), nodes: new Map<string, numb
 let activeSession: Session | null = null;
 
 /** 아직 서버에 없는 행을 모두 올린다. 올릴 게 없으면 바로 끝난다. */
+/** 영구 삭제된 행을 서버에서도 지운다. */
+async function flushPurge(): Promise<void> {
+  const maps = [...pendingPurge.maps];
+  const nodes = [...pendingPurge.nodes];
+  if (!maps.length && !nodes.length) return;
+  await deleteRows(maps, nodes);
+  maps.forEach((id) => {
+    pendingPurge.maps.delete(id);
+    serverHas.maps.delete(id);
+  });
+  nodes.forEach((id) => {
+    pendingPurge.nodes.delete(id);
+    serverHas.nodes.delete(id);
+  });
+}
+
 async function flushPending(): Promise<void> {
   if (!activeSession) return;
+  await flushPurge();
   const { maps, nodes } = useMapStore.getState();
   const dirtyMaps = maps.filter((m) => serverHas.maps.get(m.id) !== m.updatedAt);
   const dirtyNodes = nodes.filter((n) => serverHas.nodes.get(n.id) !== n.updatedAt);
@@ -37,10 +54,12 @@ export function useSync() {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 동기화가 꺼져 있으면 로컬 전용으로만 쓴다
+  // 동기화가 꺼져 있으면 로컬 전용으로만 쓴다.
+  // 캐시를 다 읽은 뒤에 실행해야 방금 만든 맵이 덮어써지지 않는다.
+  const loaded = useMapStore((s) => s.loaded);
   useEffect(() => {
-    if (!syncEnabled) useMapStore.getState().ensureFirstMap();
-  }, []);
+    if (!syncEnabled && loaded) useMapStore.getState().ensureFirstMap();
+  }, [loaded]);
 
   useEffect(() => {
     const sb = supabase;
@@ -62,9 +81,11 @@ export function useSync() {
       const { maps, nodes } = useMapStore.getState();
       const dirtyMaps = maps.filter((m) => serverHas.maps.get(m.id) !== m.updatedAt);
       const dirtyNodes = nodes.filter((n) => serverHas.nodes.get(n.id) !== n.updatedAt);
-      if (!dirtyMaps.length && !dirtyNodes.length) return;
+      const hasPurge = pendingPurge.maps.size > 0 || pendingPurge.nodes.size > 0;
+      if (!dirtyMaps.length && !dirtyNodes.length && !hasPurge) return;
       setStatus("syncing");
       try {
+        await flushPurge();
         await pushRows(dirtyMaps, dirtyNodes, session.user.id);
         dirtyMaps.forEach((m) => serverHas.maps.set(m.id, m.updatedAt));
         dirtyNodes.forEach((n) => serverHas.nodes.set(n.id, n.updatedAt));
@@ -115,6 +136,14 @@ export function useSync() {
           "postgres_changes",
           { event: "*", schema: "public", table: "mindmap_maps", filter: `user_id=eq.${uid}` },
           (payload) => {
+            if (payload.eventType === "DELETE") {
+              const id = (payload.old as { id?: string })?.id;
+              if (id) {
+                serverHas.maps.delete(id);
+                useMapStore.getState().removeLocal([id], []);
+              }
+              return;
+            }
             if (!payload.new || !("id" in payload.new)) return;
             const m = rowToMap(payload.new as never);
             serverHas.maps.set(m.id, m.updatedAt);
@@ -125,6 +154,14 @@ export function useSync() {
           "postgres_changes",
           { event: "*", schema: "public", table: "mindmap_nodes", filter: `user_id=eq.${uid}` },
           (payload) => {
+            if (payload.eventType === "DELETE") {
+              const id = (payload.old as { id?: string })?.id;
+              if (id) {
+                serverHas.nodes.delete(id);
+                useMapStore.getState().removeLocal([], [id]);
+              }
+              return;
+            }
             if (!payload.new || !("id" in payload.new)) return;
             const n = rowToNode(payload.new as never);
             serverHas.nodes.set(n.id, n.updatedAt);

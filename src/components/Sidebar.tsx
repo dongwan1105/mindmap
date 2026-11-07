@@ -1,6 +1,7 @@
 import { useMapStore } from "../store/useMapStore";
 import { THEMES } from "../themes";
 import { signOut, type SyncStatus } from "../sync/useSync";
+import { trashEntries } from "./Trash";
 
 const SYNC_LABEL: Record<SyncStatus, string> = {
   idle: "로컬 전용",
@@ -12,9 +13,12 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
 export default function Sidebar({
   email,
   syncStatus,
+  onNavigate,
 }: {
   email: string | null;
   syncStatus: SyncStatus;
+  /** 좁은 화면에서 항목을 고르면 서랍을 닫는다 */
+  onNavigate?: () => void;
 }) {
   const allMaps = useMapStore((s) => s.maps);
   const maps = allMaps.filter((m) => !m.deletedAt);
@@ -23,13 +27,24 @@ export default function Sidebar({
   const hasPinned = useMapStore(
     (s) => s.nodes.some((n) => n.mapId === s.currentMapId && !n.deletedAt && n.x !== null),
   );
-  const { createMap, deleteMap, selectMap, setTheme, resetPositions } = useMapStore.getState();
+  const allNodes = useMapStore((s) => s.nodes);
+  const trashCount = trashEntries(allMaps, allNodes).length;
+  const { createMap, deleteMap, selectMap, setTheme, resetPositions, setTrashOpen } =
+    useMapStore.getState();
 
   return (
     <aside className="sidebar">
       <div className="sidebar__header">
         <span>마인드맵</span>
-        <button className="sidebar__add" title="새 마인드맵" onClick={() => createMap()}>
+        <button
+          className="sidebar__add"
+          title="새 마인드맵"
+          onClick={() => {
+            createMap();
+            setTrashOpen(false);
+            onNavigate?.();
+          }}
+        >
           +
         </button>
       </div>
@@ -42,7 +57,11 @@ export default function Sidebar({
             <div
               key={m.id}
               className={`map-item${m.id === currentMapId ? " map-item--active" : ""}`}
-              onClick={() => selectMap(m.id)}
+              onClick={() => {
+                selectMap(m.id);
+                setTrashOpen(false);
+                onNavigate?.();
+              }}
             >
               <span className="map-item__title">{m.title || "제목 없음"}</span>
               <button
@@ -84,9 +103,21 @@ export default function Sidebar({
         <button
           className="tool-button"
           disabled={!hasPinned}
-          onClick={() => currentMapId && resetPositions(currentMapId)}
+          onClick={() => {
+            if (currentMapId) resetPositions(currentMapId);
+            onNavigate?.();
+          }}
         >
           자동 정렬로 되돌리기
+        </button>
+        <button
+          className="tool-button"
+          onClick={() => {
+            setTrashOpen(true);
+            onNavigate?.();
+          }}
+        >
+          휴지통{trashCount > 0 ? ` (${trashCount})` : ""}
         </button>
       </div>
 

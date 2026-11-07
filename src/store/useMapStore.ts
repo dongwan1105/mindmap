@@ -45,6 +45,16 @@ interface MapState {
   /** 로그아웃 시 로컬 캐시를 비운다. */
   clearLocal: () => void;
 
+  trashOpen: boolean;
+  setTrashOpen: (open: boolean) => void;
+  restoreMap: (id: string) => void;
+  restoreNode: (id: string) => void;
+  purgeMap: (id: string) => void;
+  purgeNode: (id: string) => void;
+  emptyTrash: () => void;
+  /** 서버에서 영구 삭제된 행을 로컬에서도 없앤다 (다른 기기의 삭제 반영) */
+  removeLocal: (mapIds: string[], nodeIds: string[]) => void;
+
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
 }
@@ -52,6 +62,12 @@ interface MapState {
 const now = () => Date.now();
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * 영구 삭제된 행의 id. 동기화 모듈이 서버에서 지운 뒤 비운다.
+ * soft delete와 달리 업서트로는 표현할 수 없어 따로 모은다.
+ */
+export const pendingPurge = { maps: new Set<string>(), nodes: new Set<string>() };
 
 /** 동기화 모듈이 등록하는 콜백. 로컬 저장이 끝날 때마다 호출된다. */
 let onLocalChange: (() => void) | null = null;
@@ -85,9 +101,11 @@ export const useMapStore = create<MapState>((set, get) => {
     editingNodeId: null,
     editingInitial: null,
     loaded: false,
+    trashOpen: false,
     theme: (localStorage.getItem(THEME_KEY) as ThemeId) || DEFAULT_THEME,
 
     async load() {
+      if (get().loaded) return; // 두 번 불려도 이미 있는 상태를 덮어쓰지 않는다
       const { maps, nodes } = await storage.loadAll();
       const live = maps.filter((m) => !m.deletedAt);
       set({
@@ -381,6 +399,116 @@ export const useMapStore = create<MapState>((set, get) => {
       set({ maps: [], nodes: [], currentMapId: null, selectedNodeId: null, editingNodeId: null });
       void storage.saveMaps([]);
       void storage.saveNodes([]);
+    },
+
+    setTrashOpen(open) {
+      set({ trashOpen: open });
+    },
+
+    restoreMap(id) {
+      const map = get().maps.find((m) => m.id === id);
+      if (!map || map.deletedAt === null) return;
+      const at = map.deletedAt;
+      const t = now();
+      set((s) => ({
+        maps: s.maps.map((m) => (m.id === id ? { ...m, deletedAt: null, updatedAt: t } : m)),
+        // 맵과 같이 지워진 카드만 되살린다 (그 전에 따로 지운 카드는 휴지통에 남는다)
+        nodes: s.nodes.map((n) =>
+          n.mapId === id && n.deletedAt === at ? { ...n, deletedAt: null, updatedAt: t } : n,
+        ),
+        currentMapId: id,
+      }));
+      persist();
+    },
+
+    restoreNode(id) {
+      const node = get().nodes.find((n) => n.id === id);
+      if (!node || node.deletedAt === null) return;
+      const at = node.deletedAt;
+      const t = now();
+      // 함께 지워진 자손만 되살린다
+      const ids = new Set<string>([id]);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const n of get().nodes) {
+          if (!ids.has(n.id) && n.parentId && ids.has(n.parentId) && n.deletedAt === at) {
+            ids.add(n.id);
+            grew = true;
+          }
+        }
+      }
+      set((s) => ({
+        nodes: s.nodes.map((n) =>
+          ids.has(n.id) ? { ...n, deletedAt: null, updatedAt: t } : n,
+        ),
+        currentMapId: node.mapId,
+        selectedNodeId: id,
+      }));
+      touchMap(node.mapId);
+      persist();
+    },
+
+    purgeMap(id) {
+      const nodeIds = get()
+        .nodes.filter((n) => n.mapId === id)
+        .map((n) => n.id);
+      pendingPurge.maps.add(id);
+      nodeIds.forEach((n) => pendingPurge.nodes.add(n));
+      set((s) => ({
+        maps: s.maps.filter((m) => m.id !== id),
+        nodes: s.nodes.filter((n) => n.mapId !== id),
+      }));
+      persist();
+    },
+
+    purgeNode(id) {
+      const all = get().nodes;
+      const ids = new Set<string>([id]);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const n of all) {
+          if (!ids.has(n.id) && n.parentId && ids.has(n.parentId)) {
+            ids.add(n.id);
+            grew = true;
+          }
+        }
+      }
+      ids.forEach((n) => pendingPurge.nodes.add(n));
+      set((s) => ({ nodes: s.nodes.filter((n) => !ids.has(n.id)) }));
+      persist();
+    },
+
+    emptyTrash() {
+      const { maps, nodes } = get();
+      const deadMaps = maps.filter((m) => m.deletedAt !== null).map((m) => m.id);
+      const deadMapSet = new Set(deadMaps);
+      const deadNodes = nodes
+        .filter((n) => n.deletedAt !== null || deadMapSet.has(n.mapId))
+        .map((n) => n.id);
+      if (!deadMaps.length && !deadNodes.length) return;
+      deadMaps.forEach((id) => pendingPurge.maps.add(id));
+      deadNodes.forEach((id) => pendingPurge.nodes.add(id));
+      const deadNodeSet = new Set(deadNodes);
+      set((s) => ({
+        maps: s.maps.filter((m) => !deadMapSet.has(m.id)),
+        nodes: s.nodes.filter((n) => !deadNodeSet.has(n.id)),
+      }));
+      persist();
+    },
+
+    removeLocal(mapIds, nodeIds) {
+      if (!mapIds.length && !nodeIds.length) return;
+      const m = new Set(mapIds);
+      const n = new Set(nodeIds);
+      set((s) => ({
+        maps: s.maps.filter((x) => !m.has(x.id)),
+        nodes: s.nodes.filter((x) => !n.has(x.id) && !m.has(x.mapId)),
+      }));
+      const { maps, nodes } = get();
+      void storage.saveMaps(maps);
+      void storage.saveNodes(nodes);
     },
 
     setTheme(theme) {

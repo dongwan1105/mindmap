@@ -115,3 +115,22 @@ export async function pushRows(maps: MindMap[], nodes: MindNode[], userId: strin
     if (error) throw error;
   }
 }
+
+/** 영구 삭제. soft delete와 달리 행 자체를 없앤다. */
+export async function deleteRows(mapIds: string[], nodeIds: string[]) {
+  if (!supabase) return;
+  for (let i = 0; i < nodeIds.length; i += 200) {
+    const { error } = await supabase
+      .from("mindmap_nodes")
+      .delete()
+      .in("id", nodeIds.slice(i, i + 200));
+    if (error) throw error;
+  }
+  for (let i = 0; i < mapIds.length; i += 200) {
+    const { error } = await supabase
+      .from("mindmap_maps")
+      .delete()
+      .in("id", mapIds.slice(i, i + 200));
+    if (error) throw error;
+  }
+}
