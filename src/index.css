@@ -373,13 +373,13 @@ button {
 
 .stylebar {
   position: absolute;
-  left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 7px;
+  padding: 6px 10px;
+  /* 바탕은 클릭을 통과시키고, 버튼에서만 받는다.
+     그래야 이웃 카드를 덮고 있어도 그 카드를 누를 수 있다. */
+  pointer-events: none;
   background: var(--bg-panel);
   border: 1px solid var(--border-strong);
   border-radius: 11px;
@@ -825,10 +825,8 @@ button {
   left: -10px;
 }
 
-.stylebar {
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: calc(100vw - 24px);
+.stylebar > * {
+  pointer-events: auto;
 }
 
 .stylebar__tabs {

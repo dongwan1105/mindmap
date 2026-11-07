@@ -1,12 +1,18 @@
 import { useState } from "react";
+import { useInternalNode, useViewport } from "@xyflow/react";
 import { useMapStore } from "../store/useMapStore";
 import { CARD_COLORS, TEXT_COLORS } from "../palette";
 
 type Target = "text" | "card";
 
+const BAR_H = 40; // 바 높이(대략) — 위에 자리가 없으면 아래로 뒤집는 기준
+
 /**
- * 선택한 카드의 모양을 바꾸는 바.
- * 카드에 붙여 두면 바로 위/아래 카드를 가려 누를 수 없게 되므로 캔버스 아래에 띄운다.
+ * 선택한 카드의 모양을 바꾸는 바. 카드 바로 위에 붙는다.
+ *
+ * 형제 카드 간격이 좁아서 바가 이웃 카드를 덮게 되는데,
+ * 바탕은 클릭을 통과시키고 버튼에서만 받도록 해 두었다.
+ * 카드가 화면 위쪽에 붙어 있으면 아래로 뒤집는다.
  */
 export default function StyleBar() {
   const [target, setTarget] = useState<Target>("text");
@@ -16,13 +22,29 @@ export default function StyleBar() {
   const setNodeStyle = useMapStore((s) => s.setNodeStyle);
   const arrangeChildren = useMapStore((s) => s.arrangeChildren);
 
+  const { x: vx, y: vy, zoom } = useViewport();
+  // 크기가 실제로 측정된 뒤에 위치를 잡아야 카드 가운데에 정확히 붙는다
+  const flowNode = useInternalNode(selectedId ?? "");
+
   const node = selectedId ? nodes.find((n) => n.id === selectedId && !n.deletedAt) : undefined;
-  if (!node || editing) return null;
+  const w = flowNode?.measured?.width;
+  const h = flowNode?.measured?.height;
+  if (!node || !flowNode || editing || !w || !h) return null;
+
+  const pos = flowNode.internals.positionAbsolute;
+  const centerX = (pos.x + w / 2) * zoom + vx;
+  const topY = pos.y * zoom + vy;
+  const bottomY = (pos.y + h) * zoom + vy;
+
+  // 위에 자리가 없으면 카드 아래로
+  const below = topY < BAR_H + 24;
+  const style = below
+    ? { left: centerX, top: bottomY + 10, transform: "translateX(-50%)" }
+    : { left: centerX, top: topY - 10, transform: "translate(-50%, -100%)" };
 
   const colors = target === "text" ? TEXT_COLORS : CARD_COLORS;
   const current = target === "text" ? node.color : node.bg;
 
-  // 하위 카드 중 직접 옮긴 것이 있을 때만 정렬 버튼을 쓸 수 있게
   const movedBelow = (() => {
     const ids = new Set<string>();
     let frontier = [node.id];
@@ -40,7 +62,7 @@ export default function StyleBar() {
   })();
 
   return (
-    <div className="stylebar">
+    <div className="stylebar" style={style}>
       <div className="stylebar__tabs">
         {(["text", "card"] as Target[]).map((t) => (
           <button
@@ -79,14 +101,15 @@ export default function StyleBar() {
         B
       </button>
 
-      <button
-        className="stylebar__arrange"
-        disabled={!movedBelow}
-        title="이 카드의 하위 카드들을 자동 배치로 되돌립니다"
-        onClick={() => arrangeChildren(node.id)}
-      >
-        하위 정렬
-      </button>
+      {movedBelow && (
+        <button
+          className="stylebar__arrange"
+          title="이 카드의 하위 카드들을 자동 배치로 되돌립니다"
+          onClick={() => arrangeChildren(node.id)}
+        >
+          하위 정렬
+        </button>
+      )}
     </div>
   );
 }

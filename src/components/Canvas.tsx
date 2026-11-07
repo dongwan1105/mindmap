@@ -180,6 +180,7 @@ function CanvasInner() {
   }
 
   return (
+    <>
     <ReactFlow<MindFlowNode>
       nodes={nodes}
       edges={edges}
@@ -203,6 +204,8 @@ function CanvasInner() {
       <Background gap={24} size={1} />
       <Controls showInteractive={false} />
     </ReactFlow>
+    <StyleBar />
+    </>
   );
 }
 
@@ -212,7 +215,6 @@ export default function Canvas() {
       <ReactFlowProvider>
         <CanvasInner />
       </ReactFlowProvider>
-      <StyleBar />
     </div>
   );
 }
