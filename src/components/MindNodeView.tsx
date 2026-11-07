@@ -146,14 +146,25 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
 
       {hasChildren && (
         <button
-          className={`mind-node__toggle nodrag${dir === "left" ? " mind-node__toggle--left" : ""}`}
+          className={[
+            "mind-node__toggle",
+            "nodrag",
+            dir === "left" && "mind-node__toggle--left",
+            // 접혀 있으면 하위 카드가 있는 쪽을, 펼쳐져 있으면 접히는 쪽을 가리킨다
+            node.collapsed === (dir === "right") ? "" : "mind-node__toggle--back",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           title={node.collapsed ? "펼치기" : "접기"}
+          aria-label={node.collapsed ? "하위 카드 펼치기" : "하위 카드 접기"}
           onClick={(e) => {
             e.stopPropagation();
             toggleCollapse(id);
           }}
         >
-          {node.collapsed ? "+" : "–"}
+          <svg viewBox="0 0 12 12" width="9" height="9" aria-hidden="true">
+            <path d="M4 2 L9 6 L4 10 Z" fill="currentColor" />
+          </svg>
         </button>
       )}
 

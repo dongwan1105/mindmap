@@ -323,20 +323,29 @@ button {
 
 .mind-node__toggle {
   position: absolute;
-  right: -9px;
+  right: -10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 17px;
-  height: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   border: 1px solid var(--border-strong);
   background: var(--bg-panel);
   color: var(--text-secondary);
-  font-size: 10px;
-  line-height: 15px;
-  text-align: center;
   cursor: pointer;
   padding: 0;
+}
+
+/* 삼각형이 가리키는 방향 */
+.mind-node__toggle svg {
+  transition: transform 0.15s ease;
+}
+
+.mind-node__toggle--back svg {
+  transform: rotate(180deg);
 }
 
 .mind-node__toggle:hover {
@@ -393,7 +402,7 @@ button {
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
   padding: 6px 10px;
   /* 바탕은 클릭을 통과시키고, 버튼에서만 받는다.
      그래야 이웃 카드를 덮고 있어도 그 카드를 누를 수 있다. */
@@ -414,10 +423,11 @@ button {
 
 .swatch {
   flex: none;
-  width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  border: 1px solid rgba(128, 128, 128, 0.45);
+  /* 동그라미는 사이에 빈 틈이 많아 빗맞히기 쉬워서 사각으로 둔다 */
+  width: 24px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
   padding: 0;
   cursor: pointer;
 }
@@ -430,14 +440,17 @@ button {
 .swatch--none::after {
   content: "";
   position: absolute;
-  inset: 4px;
+  left: 3px;
+  right: 3px;
+  top: 50%;
   border-top: 1px solid var(--text-secondary);
-  transform: rotate(-45deg);
-  transform-origin: center;
+  transform: rotate(-32deg);
 }
 
 .swatch--on {
-  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 3px var(--accent);
+  box-shadow:
+    0 0 0 2px var(--bg-panel),
+    0 0 0 3px var(--text-primary);
 }
 
 .bold-btn {
@@ -456,8 +469,9 @@ button {
 }
 
 .bold-btn--on {
-  background: var(--accent);
-  border-color: var(--accent);
+  /* 색이 아니라 눌린 상태로 보이게 — 색상 선택처럼 읽히면 안 된다 */
+  background: var(--text-primary);
+  border-color: var(--text-primary);
   color: var(--bg-panel);
 }
 
@@ -835,7 +849,7 @@ button {
 /* 왼쪽으로 뻗은 가지에서는 버튼도 왼쪽에 둔다 */
 .mind-node__toggle--left {
   right: auto;
-  left: -9px;
+  left: -10px;
 }
 
 .mind-node__add--left {
