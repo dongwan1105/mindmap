@@ -42,7 +42,13 @@ interface MapState {
   reorderMaps: (orderedIds: string[]) => void;
   selectMap: (id: string) => void;
 
-  selectNode: (id: string | null) => void;
+  /**
+   * 카드 선택. 꾸미기 바는 사용자가 직접 카드를 눌렀을 때만 띄운다
+   * (카드를 만들고 Enter를 친 직후처럼, 선택이 곁다리로 생길 때는 뜨지 않게)
+   */
+  selectNode: (id: string | null, opts?: { showBar?: boolean }) => void;
+  /** 꾸미기 바가 떠 있는지 */
+  barOpen: boolean;
   startEditing: (id: string | null, initialText?: string) => void;
   updateNodeText: (id: string, text: string) => void;
   addChild: (parentId: string) => string;
@@ -133,6 +139,7 @@ export const useMapStore = create<MapState>((set, get) => {
     selectedNodeId: null,
     editingNodeId: null,
     editingInitial: null,
+    barOpen: false,
     loaded: false,
     panel: "map",
     workspaceName: localStorage.getItem(NAME_KEY) || DEFAULT_WORKSPACE_NAME,
@@ -325,8 +332,8 @@ export const useMapStore = create<MapState>((set, get) => {
       set({ currentMapId: id, selectedNodeId: null, editingNodeId: null });
     },
 
-    selectNode(id) {
-      set({ selectedNodeId: id });
+    selectNode(id, opts) {
+      set({ selectedNodeId: id, barOpen: id !== null && (opts?.showBar ?? false) });
     },
 
     startEditing(id, initialText) {
@@ -334,6 +341,7 @@ export const useMapStore = create<MapState>((set, get) => {
         editingNodeId: id,
         editingInitial: initialText ?? null,
         selectedNodeId: id ?? get().selectedNodeId,
+        barOpen: false,
       });
     },
 
@@ -376,6 +384,7 @@ export const useMapStore = create<MapState>((set, get) => {
         selectedNodeId: node.id,
         editingNodeId: node.id,
         editingInitial: null,
+        barOpen: false,
       }));
       touchMap(parent.mapId);
       persist();
@@ -417,6 +426,7 @@ export const useMapStore = create<MapState>((set, get) => {
         selectedNodeId: newNode.id,
         editingNodeId: newNode.id,
         editingInitial: null,
+        barOpen: false,
       }));
       touchMap(node.mapId);
       persist();
@@ -438,6 +448,7 @@ export const useMapStore = create<MapState>((set, get) => {
         nodes: s.nodes.map((n) => (toDelete.has(n.id) ? { ...n, deletedAt: t, updatedAt: t } : n)),
         selectedNodeId: target.parentId,
         editingNodeId: null,
+        barOpen: false,
       }));
       touchMap(target.mapId);
       persist();
@@ -644,6 +655,7 @@ export const useMapStore = create<MapState>((set, get) => {
         ),
         currentMapId: node.mapId,
         selectedNodeId: id,
+        barOpen: false,
       }));
       touchMap(node.mapId);
       persist();

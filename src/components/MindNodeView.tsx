@@ -97,7 +97,7 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
         // 폰에서는 이미 고른 카드를 한 번 더 탭하면 바로 편집된다.
         // (더블탭은 확대와 겹쳐서 잘 안 먹는다)
         if (selected && !editing && isTouchDevice()) startEditing(id);
-        else selectNode(id);
+        else selectNode(id, { showBar: true });
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();

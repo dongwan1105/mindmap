@@ -18,6 +18,7 @@ export default function StyleBar() {
   const [target, setTarget] = useState<Target>("text");
   const selectedId = useMapStore((s) => s.selectedNodeId);
   const editing = useMapStore((s) => s.editingNodeId);
+  const barOpen = useMapStore((s) => s.barOpen);
   const nodes = useMapStore((s) => s.nodes);
   const setNodeStyle = useMapStore((s) => s.setNodeStyle);
   const arrangeChildren = useMapStore((s) => s.arrangeChildren);
@@ -29,7 +30,7 @@ export default function StyleBar() {
   const node = selectedId ? nodes.find((n) => n.id === selectedId && !n.deletedAt) : undefined;
   const w = flowNode?.measured?.width;
   const h = flowNode?.measured?.height;
-  if (!node || !flowNode || editing || !w || !h) return null;
+  if (!node || !flowNode || editing || !barOpen || !w || !h) return null;
 
   const pos = flowNode.internals.positionAbsolute;
   const centerX = (pos.x + w / 2) * zoom + vx;
