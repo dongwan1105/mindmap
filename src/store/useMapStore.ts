@@ -30,7 +30,7 @@ interface MapState {
   moveMapToFolder: (mapId: string, folderId: string | null, beforeMapId?: string | null) => void;
   reorderFolders: (orderedIds: string[]) => void;
 
-  createMap: (title?: string) => void;
+  createMap: (title?: string, folderId?: string | null) => void;
   deleteMap: (id: string) => void;
   renameMap: (id: string, title: string) => void;
   /** 목록에 보이는 순서대로 맵 순서를 다시 매긴다 */
@@ -141,15 +141,17 @@ export const useMapStore = create<MapState>((set, get) => {
       void storage.saveNodes(nodes);
     },
 
-    createMap(title = "새 마인드맵") {
+    createMap(title = "새 마인드맵", folderId = null) {
       const mapId = nanoid();
       const t = now();
-      // 새 맵은 목록 맨 위로
-      const minOrder = get().maps.reduce((m, x) => Math.min(m, x.order), 0);
+      // 같은 자리(폴더 안이면 그 폴더) 맨 위로
+      const minOrder = get()
+        .maps.filter((x) => x.folderId === folderId)
+        .reduce((m, x) => Math.min(m, x.order), 0);
       const map: MindMap = {
         id: mapId,
         title,
-        folderId: null,
+        folderId,
         order: minOrder - 1,
         createdAt: t,
         updatedAt: t,
@@ -171,6 +173,10 @@ export const useMapStore = create<MapState>((set, get) => {
         deletedAt: null,
       };
       set((s) => ({
+        // 접힌 폴더에 넣으면 안 보이므로 펼쳐 준다
+        folders: s.folders.map((f) =>
+          f.id === folderId && f.collapsed ? { ...f, collapsed: false, updatedAt: t } : f,
+        ),
         maps: [...s.maps, map],
         nodes: [...s.nodes, root],
         currentMapId: mapId,

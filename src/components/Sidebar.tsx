@@ -238,7 +238,7 @@ export default function Sidebar({
           </button>
           <button
             className="sidebar__add"
-            title="새 마인드맵"
+            title="폴더 밖에 새 마인드맵"
             onClick={() => {
               createMap();
               setTrashOpen(false);
@@ -274,6 +274,18 @@ export default function Sidebar({
                   {row.folder.name || "이름 없는 폴더"}
                 </span>
               )}
+              <button
+                className="folder-item__add"
+                title="이 폴더에 새 마인드맵"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  createMap(undefined, row.folder.id);
+                  setTrashOpen(false);
+                  onNavigate?.();
+                }}
+              >
+                +
+              </button>
               <button
                 className="map-item__delete"
                 title="폴더 삭제 (안의 맵은 남습니다)"

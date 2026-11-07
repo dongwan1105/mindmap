@@ -912,13 +912,12 @@ button {
 .folder-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 7px 10px;
-  margin-top: 2px;
+  gap: 4px;
+  padding: 9px 8px 9px 4px;
+  margin-top: 6px;
   border-radius: 7px;
   cursor: pointer;
-  font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .folder-item:hover {
@@ -933,9 +932,14 @@ button {
 
 .folder-item__caret {
   flex: none;
-  width: 12px;
-  font-size: 9px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
   line-height: 1;
+  color: var(--text-secondary);
 }
 
 .folder-item__name {
@@ -943,7 +947,36 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
+  /* 맵 이름과 뚜렷이 구분되게: 더 크고, 굵고, 자간을 준다 */
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.folder-item__add {
+  visibility: hidden;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.folder-item:hover .folder-item__add,
+.folder-item--drop .folder-item__add {
+  visibility: visible;
+}
+
+.folder-item__add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .folder-item .map-item__delete {
@@ -955,7 +988,7 @@ button {
 }
 
 .map-item--nested {
-  margin-left: 16px;
+  margin-left: 18px;
 }
 
 .map-item--dropline {
