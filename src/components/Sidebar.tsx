@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useMapStore } from "../store/useMapStore";
 import { THEMES } from "../themes";
 import { signOut, type SyncStatus } from "../sync/useSync";
@@ -30,13 +30,18 @@ export default function Sidebar({
   );
   const allNodes = useMapStore((s) => s.nodes);
   const trashCount = trashEntries(allMaps, allNodes).length;
-  const { createMap, deleteMap, selectMap, setTheme, resetPositions, setTrashOpen, reorderMaps } =
+  const { createMap, deleteMap, selectMap, setTheme, resetPositions, setTrashOpen } =
     useMapStore.getState();
 
   // 드래그로 순서 바꾸기. 손잡이에서만 시작하므로 항목 탭(선택)과 겹치지 않는다.
   const listRef = useRef<HTMLDivElement>(null);
   const draggingId = useRef<string | null>(null);
+  const drag = useRef<{ startY: number; startTop: number; pointerY: number } | null>(null);
   const [liveOrder, setLiveOrder] = useState<string[] | null>(null);
+  /** 드래그 중인 순서. 창 이벤트 핸들러에서도 읽어야 해서 ref에 둔다 */
+  const orderRef = useRef<string[]>([]);
+  /** 직전 프레임에서 각 항목이 있던 화면상 위치 (FLIP 애니메이션용) */
+  const prevTops = useRef(new Map<string, number>());
 
   const sorted = maps
     .slice()
@@ -45,23 +50,80 @@ export default function Sidebar({
     ? (liveOrder.map((id) => sorted.find((m) => m.id === id)!).filter(Boolean) as typeof sorted)
     : sorted;
 
-  const startDrag = (e: React.PointerEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    (e.currentTarget as Element).setPointerCapture(e.pointerId);
-    draggingId.current = id;
-    setLiveOrder(sorted.map((m) => m.id));
-  };
+  const itemEl = (id: string) =>
+    listRef.current?.querySelector<HTMLElement>(`[data-map-id="${id}"]`) ?? null;
 
-  const moveDrag = (e: React.PointerEvent) => {
+  /**
+   * 끄는 항목은 손가락 위치를 그대로 따라가고,
+   * 비켜나는 항목들은 이전 위치에서 새 위치로 미끄러지듯 움직인다 (FLIP).
+   */
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const els = Array.from(list.querySelectorAll<HTMLElement>("[data-map-id]"));
+    const next = new Map<string, number>();
+
+    for (const el of els) {
+      const id = el.dataset.mapId!;
+      el.style.transform = ""; // 원래 자리를 재기 위해 잠시 해제
+      const slotTop = el.getBoundingClientRect().top;
+
+      if (id === draggingId.current && drag.current) {
+        // 끄는 항목은 손가락 위치를 그대로 따라간다
+        const want = drag.current.startTop + (drag.current.pointerY - drag.current.startY);
+        el.style.transform = `translateY(${want - slotTop}px)`;
+        next.set(id, want); // 눈에 보이는 위치 (놓을 때 여기서부터 미끄러지도록)
+        continue;
+      }
+
+      next.set(id, slotTop);
+      const prev = prevTops.current.get(id);
+      if (prev !== undefined && Math.abs(prev - slotTop) > 0.5) {
+        // 비켜나는 항목은 이전 자리에서 새 자리로 미끄러진다.
+        // style이 아니라 애니메이션으로 처리해 끝난 뒤 흔적이 남지 않게 한다.
+        el.animate(
+          [{ transform: `translateY(${prev - slotTop}px)` }, { transform: "none" }],
+          { duration: 180, easing: "ease-out" },
+        );
+      }
+    }
+    prevTops.current = next;
+  });
+
+  /**
+   * 포인터 캡처를 쓰지 않고 창에서 직접 받는다.
+   * 순서가 바뀌면 React가 DOM 요소를 옮기는데, 그때 캡처가 풀려
+   * 이후 움직임이 손잡이에 전달되지 않기 때문.
+   */
+  const onMove = useCallback((e: PointerEvent) => {
     const id = draggingId.current;
-    if (!id || !listRef.current) return;
-    const items = Array.from(listRef.current.querySelectorAll(".map-item")) as HTMLElement[];
-    const current = liveOrder ?? sorted.map((m) => m.id);
+    const list = listRef.current;
+    if (!id || !list || !drag.current) return;
+    drag.current.pointerY = e.clientY;
+
+    const items = Array.from(list.querySelectorAll<HTMLElement>("[data-map-id]"));
+
+    /*
+     * 자리 계산에는 offsetTop을 쓴다.
+     * getBoundingClientRect는 미끄러지는 중인 항목의 "지금 보이는 위치"를 돌려주기
+     * 때문에, 애니메이션이 도는 동안 측정하면 좌표가 엉킨다. offsetTop은 변형과
+     * 무관한 실제 자리라서 흔들리지 않는다.
+     */
+    const listRect = list.getBoundingClientRect();
+    const base = listRect.top - list.scrollTop - list.offsetTop;
+    const slotTop = (el: HTMLElement) => base + el.offsetTop;
+
+    // 손가락을 따라가는 움직임은 React를 거치지 않고 바로 반영한다 (끊기지 않게)
+    const dragged = items.find((el) => el.dataset.mapId === id);
+    if (dragged) {
+      const want = drag.current.startTop + (e.clientY - drag.current.startY);
+      dragged.style.transform = `translateY(${want - slotTop(dragged)}px)`;
+    }
+
+    const current = orderRef.current;
     let target = current.length - 1;
     for (let i = 0; i < items.length; i++) {
-      const r = items[i].getBoundingClientRect();
-      if (e.clientY < r.top + r.height / 2) {
+      if (e.clientY < slotTop(items[i]) + items[i].offsetHeight / 2) {
         target = i;
         break;
       }
@@ -71,13 +133,33 @@ export default function Sidebar({
     const next = [...current];
     next.splice(from, 1);
     next.splice(target, 0, id);
+    orderRef.current = next;
     setLiveOrder(next);
-  };
+  }, []);
 
-  const endDrag = () => {
-    if (draggingId.current && liveOrder) reorderMaps(liveOrder);
+  const onUp = useCallback(() => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+    if (draggingId.current && orderRef.current.length) {
+      useMapStore.getState().reorderMaps(orderRef.current);
+    }
     draggingId.current = null;
-    setLiveOrder(null);
+    drag.current = null;
+    setLiveOrder(null); // 놓은 자리에서 제자리로 미끄러진다 (위 FLIP이 처리)
+  }, [onMove]);
+
+  const startDrag = (e: React.PointerEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const top = itemEl(id)?.getBoundingClientRect().top ?? 0;
+    draggingId.current = id;
+    drag.current = { startY: e.clientY, startTop: top, pointerY: e.clientY };
+    orderRef.current = sorted.map((m) => m.id);
+    setLiveOrder(orderRef.current);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   };
 
   return (
@@ -101,6 +183,7 @@ export default function Sidebar({
         {shown.map((m) => (
           <div
             key={m.id}
+            data-map-id={m.id}
             className={`map-item${m.id === currentMapId ? " map-item--active" : ""}${
               draggingId.current === m.id ? " map-item--dragging" : ""
             }`}
@@ -114,9 +197,6 @@ export default function Sidebar({
               className="map-item__handle"
               title="끌어서 순서 바꾸기"
               onPointerDown={(e) => startDrag(e, m.id)}
-              onPointerMove={moveDrag}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
               onClick={(e) => e.stopPropagation()}
             >
               ≡

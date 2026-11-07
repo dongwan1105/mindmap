@@ -894,7 +894,11 @@ button {
   cursor: grabbing;
 }
 
+
 .map-item--dragging {
-  opacity: 0.6;
+  position: relative;
+  z-index: 2;
+  opacity: 0.95;
   background: var(--bg-panel-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
 }
