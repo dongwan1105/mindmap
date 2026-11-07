@@ -1190,48 +1190,32 @@ button {
 
 /* ---------- 동물 마을 — 카드 뒤에 숨은 귀 ---------- */
 /* 원본 치수(248×110 기준): 카드 윗변 y=18, 바깥 귀 cy=17 r=16, 안쪽 귀 cy=15 r=7.
-   바깥 귀는 카드 뒤, 안쪽 귀는 카드 위에 겹쳐 그려져 있다.
-   카드 뒤로 보내는 z-index 는 부모의 쌓임 맥락에 막히므로, 바깥 귀는
-   카드 윗변에서 딱 끝나게 두어 겹치지 않게 한다.
-   윤곽선은 부모에만 건다 — 필터는 마스크보다 먼저 적용돼서, 같은 요소에
-   두면 윤곽이 마스크에 깎여 사라진다. */
-[data-theme="animal-village"] .mind-node .mind-node__deco {
+   귀는 카드 뒤에 있는데, 카드 뒤로 보내는 z-index 는 부모의 쌓임 맥락에
+   막힌다. 카드 윗변에서 딱 끝나게 두면 겹치지 않으니 그럴 필요가 없다.
+
+   마스크+필터로 윤곽을 그려 봤지만, 필터가 마스크보다 먼저 적용되는 데다
+   한 요소에 건 필터가 안쪽 귀까지 테두리를 둘러 색 바꾼 카드에서 진한
+   덩어리로 보였다. 채움과 테두리를 그라디언트 한 겹에 같이 담으면
+   마스크도 필터도 필요 없다 — 휴대폰에서도 가볍다. */
+[data-theme="animal-village"] .mind-node:not(.mind-node--root) .mind-node__deco {
   display: block;
   left: 0;
   right: 0;
   top: -17px;
   height: 17px;
-  filter:
-    drop-shadow(1px 0 0 var(--card-accent, var(--node-border)))
-    drop-shadow(-1px 0 0 var(--card-accent, var(--node-border)))
-    drop-shadow(0 -1px 0 var(--card-accent, var(--node-border)));
-}
-
-/* 바깥 귀 — 카드와 같은 색 */
-[data-theme="animal-village"] .mind-node .mind-node__deco::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--card-fill, var(--node-bg));
-  mask-image:
-    radial-gradient(circle 16px at 28% 16px, #000 99%, transparent 100%),
-    radial-gradient(circle 16px at 72% 16px, #000 99%, transparent 100%);
-  -webkit-mask-image:
-    radial-gradient(circle 16px at 28% 16px, #000 99%, transparent 100%),
-    radial-gradient(circle 16px at 72% 16px, #000 99%, transparent 100%);
-}
-
-/* 안쪽 귀 — 카드 윗변을 조금 넘어와 위에 얹힌다 */
-[data-theme="animal-village"] .mind-node .mind-node__deco::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 4px;
-  height: 17px;
   background-image:
-    radial-gradient(circle 7px at 28% 10px, var(--ear-inner) 99%, transparent 100%),
-    radial-gradient(circle 7px at 72% 10px, var(--ear-inner) 99%, transparent 100%);
+    /* 안쪽 귀 (위에 얹힌다) */
+    radial-gradient(circle 6px at 28% 11px,
+      var(--card-fill-strong, var(--ear-inner)) 99%, transparent 100%),
+    radial-gradient(circle 6px at 72% 11px,
+      var(--card-fill-strong, var(--ear-inner)) 99%, transparent 100%),
+    /* 바깥 귀 — 채움과 1px 테두리를 한 번에 */
+    radial-gradient(circle 16px at 28% 16px,
+      var(--card-fill, var(--node-bg)) 0 15px,
+      var(--card-accent, var(--node-border)) 15px 16px, transparent 16px),
+    radial-gradient(circle 16px at 72% 16px,
+      var(--card-fill, var(--node-bg)) 0 15px,
+      var(--card-accent, var(--node-border)) 15px 16px, transparent 16px);
 }
 
 /* ---------- 구름 나라 — 뭉게구름 실루엣 ---------- */

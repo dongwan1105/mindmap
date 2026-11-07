@@ -52,6 +52,8 @@ export function cardStyle(bg: string | null, isRoot = false) {
       "--card-accent": bg,
       // 테마 장식(동물 귀 등)이 카드와 똑같은 색을 쓰도록 실제 칠을 넘긴다
       "--card-fill": `${bg}26`,
+      // 장식의 포인트(귀 안쪽처럼 조금 더 진한 자리)
+      "--card-fill-strong": `${bg}3d`,
     } as React.CSSProperties;
   // 팔레트 색을 그대로 깔면 흰 글자가 흐려진다(특히 주황·보라).
   // 진하게 깔아 대비를 확보하면서 루트 특유의 묵직한 느낌도 지킨다.
