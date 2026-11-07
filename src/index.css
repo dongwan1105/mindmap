@@ -1,0 +1,211 @@
+@import "./theme.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-canvas);
+}
+
+button {
+  font-family: inherit;
+}
+
+.app {
+  display: flex;
+  height: 100%;
+}
+
+/* ---------- 사이드바 ---------- */
+.sidebar {
+  width: 240px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.sidebar__add {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sidebar__add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sidebar__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.map-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.map-item:hover {
+  background: var(--bg-canvas);
+}
+
+.map-item--active {
+  background: var(--bg-node-selected);
+}
+
+.map-item__title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-item__delete {
+  visibility: hidden;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.map-item:hover .map-item__delete {
+  visibility: visible;
+}
+
+.sidebar__help {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar__help kbd {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+/* ---------- 캔버스 ---------- */
+.canvas {
+  flex: 1;
+  position: relative;
+}
+
+.canvas__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.react-flow__edge-path {
+  stroke: var(--edge);
+  stroke-width: 1.5;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+/* ---------- 노드 ---------- */
+.mind-node {
+  background: var(--bg-node);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-node);
+  padding: var(--node-pad-y) var(--node-pad-x);
+  min-width: var(--node-min-width);
+  max-width: var(--node-max-width);
+  font-size: var(--node-font-size);
+  line-height: 1.4;
+  box-shadow: var(--shadow-node);
+  cursor: pointer;
+  position: relative;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mind-node--root {
+  background: var(--bg-node-root);
+  color: var(--text-on-root);
+  border-color: transparent;
+  font-weight: 600;
+  font-size: calc(var(--node-font-size) + 2px);
+}
+
+.mind-node--selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.mind-node__input {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  min-width: 60px;
+  resize: none;
+  white-space: pre-wrap;
+}
+
+.mind-node__toggle {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.mind-node .react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
