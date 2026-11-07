@@ -119,14 +119,12 @@ function CanvasInner() {
       const cur = allNodes.find((n) => n.id === selectedNodeId);
       if (!cur) return;
       const live = allNodes.filter((n) => n.mapId === cur.mapId && !n.deletedAt);
-      if (key === "ArrowLeft" && cur.parentId) selectNode(cur.parentId);
-      if (key === "ArrowRight") {
-        const kids = live.filter((n) => n.parentId === cur.id).sort((a, b) => a.order - b.order);
-        if (kids[0]) {
-          if (cur.collapsed) toggleCollapse(cur.id);
-          selectNode(kids[0].id);
-        }
-      }
+
+      // 배치된 방향. 아직 그려지지 않은(접힌) 자식은 부모 방향을 따른다.
+      const dirOf = (id: string, fallback: "left" | "right" = "right") =>
+        nodes.find((n) => n.id === id)?.data.dir ?? fallback;
+      const myDir = dirOf(cur.id);
+
       if (key === "ArrowUp" || key === "ArrowDown") {
         const sibs = live
           .filter((n) => n.parentId === cur.parentId)
@@ -134,7 +132,22 @@ function CanvasInner() {
         const i = sibs.findIndex((n) => n.id === cur.id);
         const next = sibs[key === "ArrowUp" ? i - 1 : i + 1];
         if (next) selectNode(next.id);
+        return;
       }
+
+      const kids = live
+        .filter((n) => n.parentId === cur.id)
+        .sort((a, b) => a.order - b.order);
+      const side = key === "ArrowLeft" ? "left" : "right";
+      const towardChild = kids.filter((k) => dirOf(k.id, myDir) === side);
+
+      if (towardChild[0]) {
+        if (cur.collapsed) toggleCollapse(cur.id);
+        selectNode(towardChild[0].id);
+        return;
+      }
+      // 그 방향에 자식이 없으면 부모 쪽으로 (부모는 가지의 반대편에 있다)
+      if (myDir !== side && cur.parentId) selectNode(cur.parentId);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -148,6 +161,7 @@ function CanvasInner() {
     toggleCollapse,
     startEditing,
     selectNode,
+    nodes,
   ]);
 
   // 드래그해서 다른 노드 위에 놓으면 그 노드의 자식으로 이동

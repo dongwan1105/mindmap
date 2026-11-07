@@ -9,7 +9,7 @@ import type { MindFlowNode } from "../layout/tree";
  * 모양·색은 theme.css 변수와 index.css의 .mind-node 규칙이 결정한다.
  */
 function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
-  const { node, hasChildren } = data;
+  const { node, hasChildren, dir } = data;
   const isRoot = node.parentId === null;
   const selected = useMapStore((s) => s.selectedNodeId === id);
   const editing = useMapStore((s) => s.editingNodeId === id);
@@ -83,7 +83,9 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
         startEditing(id);
       }}
     >
-      <Handle type="target" position={Position.Left} />
+      {/* 좌우 양쪽에 연결점을 둔다. 어느 쪽을 쓸지는 레이아웃이 정한다. */}
+      <Handle type="target" position={Position.Left} id="tl" />
+      <Handle type="target" position={Position.Right} id="tr" />
 
       {selected && !editing && (
         <div className="mind-node__toolbar nodrag nowheel" onClick={(e) => e.stopPropagation()}>
@@ -143,11 +145,12 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
         <span>{node.text || "새 노드"}</span>
       )}
 
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Left} id="sl" />
+      <Handle type="source" position={Position.Right} id="sr" />
 
       {hasChildren && (
         <button
-          className="mind-node__toggle nodrag"
+          className={`mind-node__toggle nodrag${dir === "left" ? " mind-node__toggle--left" : ""}`}
           title={node.collapsed ? "펼치기" : "접기"}
           onClick={(e) => {
             e.stopPropagation();
@@ -159,7 +162,7 @@ function MindNodeView({ id, data }: NodeProps<MindFlowNode>) {
       )}
 
       <button
-        className="mind-node__add nodrag"
+        className={`mind-node__add nodrag${dir === "left" ? " mind-node__add--left" : ""}`}
         title="하위 카드 추가 (Tab)"
         onClick={(e) => {
           e.stopPropagation();
