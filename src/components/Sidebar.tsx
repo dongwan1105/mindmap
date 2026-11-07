@@ -273,17 +273,6 @@ export default function Sidebar({
         </div>
       )}
 
-      <div className="sidebar__help">
-        <kbd>Tab</kbd> 자식 · <kbd>Enter</kbd> 형제 · <kbd>Space</kbd> 접기 · <kbd>Del</kbd> 삭제
-        <br />
-        더블클릭 또는 글자 입력으로 편집 · 방향키로 이동
-        <br />
-        폰에서는 고른 카드를 한 번 더 탭하면 편집
-        <br />
-        드래그: 빈 곳에 놓으면 자리 고정, 다른 카드 위에 놓으면 그 아래로 이동
-        <br />
-        부모 왼쪽에 놓으면 그 가지는 왼쪽으로 뻗습니다
-      </div>
     </aside>
   );
 }

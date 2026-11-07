@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   applyNodeChanges,
+  useStore,
   Background,
   Controls,
   ReactFlow,
@@ -11,7 +12,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useMapStore } from "../store/useMapStore";
-import { layoutTree, type MindFlowNode } from "../layout/tree";
+import { layoutTree, type MindFlowNode, type NodeSizes } from "../layout/tree";
 import { themeById } from "../themes";
 import MindNodeView from "./MindNodeView";
 import StyleBar from "./StyleBar";
@@ -37,16 +38,51 @@ function CanvasInner() {
   const { fitView, getIntersectingNodes } = useReactFlow();
 
   const edgeType = themeById(theme).edgeType;
+
+  /*
+   * 카드의 실제 크기를 받아 배치에 쓴다.
+   * 글자 수로 폭을 추정하면 한글에서 크게 빗나가서 카드끼리 붙어 버린다.
+   * 문자열 키로 받아 크기가 실제로 바뀔 때만 다시 계산되게 한다(되먹임 방지).
+   */
+  const sizeKey = useStore((s) => {
+    const parts: string[] = [];
+    s.nodeLookup.forEach((n, id) =>
+      parts.push(`${id}:${Math.round(n.measured?.width ?? 0)}x${Math.round(n.measured?.height ?? 0)}`),
+    );
+    return parts.sort().join("|");
+  });
+  const sizes = useMemo<NodeSizes>(() => {
+    const m: NodeSizes = new Map();
+    for (const part of sizeKey.split("|")) {
+      if (!part) continue;
+      const [id, wh] = part.split(":");
+      const [w, h] = wh.split("x").map(Number);
+      if (w > 0 && h > 0) m.set(id, { w, h });
+    }
+    return m;
+  }, [sizeKey]);
+
   const layout = useMemo(
-    () => (mapId ? layoutTree(allNodes, mapId, edgeType) : { nodes: [], edges: [] }),
-    [allNodes, mapId, edgeType],
+    () => (mapId ? layoutTree(allNodes, mapId, edgeType, sizes) : { nodes: [], edges: [] }),
+    [allNodes, mapId, edgeType, sizes],
   );
   const edges = layout.edges;
 
   // 드래그 중에는 React Flow가 위치를 직접 움직여야 하므로 로컬 상태를 둔다.
   // 저장된 트리가 바뀌면 다시 계산된 레이아웃으로 맞춘다.
   const [nodes, setNodes] = useState(layout.nodes);
-  useEffect(() => setNodes(layout.nodes), [layout.nodes]);
+  useEffect(() => {
+    // 새 배치를 넣을 때 이미 잰 크기를 그대로 들고 간다.
+    // 지워 버리면 React Flow가 "아직 안 잰 카드"로 보고 숨기고,
+    // 그 상태가 다시 배치를 바꿔 되먹임 고리가 생긴다.
+    setNodes((prev) => {
+      const measured = new Map(prev.map((n) => [n.id, n.measured]));
+      return layout.nodes.map((n) => {
+        const m = measured.get(n.id);
+        return m ? { ...n, measured: m } : n;
+      });
+    });
+  }, [layout.nodes]);
   const onNodesChange: OnNodesChange<MindFlowNode> = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [],

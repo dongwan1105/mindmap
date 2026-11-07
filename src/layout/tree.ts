@@ -7,15 +7,28 @@ export type MindFlowNode = Node<
 >;
 
 const NODE_H = 42;
-const CHAR_W = 8;
 const GAP_X = 70; // 부모-자식 가로 간격
 const GAP_Y = 14; // 형제 세로 간격
 
 export type Dir = "left" | "right";
 
-function estimateWidth(text: string) {
-  const longest = text.split("\n").reduce((m, l) => Math.max(m, l.length), 0);
-  return Math.min(260, Math.max(80, longest * CHAR_W + 30));
+/** 측정된 카드 크기 (id → 실제 폭·높이) */
+export type NodeSizes = Map<string, { w: number; h: number }>;
+
+const CJK = /[\u1100-\u11FF\u3000-\u303F\u3130-\u318F\uAC00-\uD7AF\u4E00-\u9FFF\uFF00-\uFFEF]/;
+
+/**
+ * 아직 그려지기 전에 쓰는 임시 추정값.
+ * 한글은 영문보다 두 배 가까이 넓어서 글자 수만으로 재면 크게 빗나간다.
+ * 한 번 그려진 뒤에는 실제 측정값으로 대체된다.
+ */
+function estimateWidth(text: string, isRoot: boolean) {
+  const widest = text.split("\n").reduce((m, line) => {
+    let w = 0;
+    for (const ch of line) w += CJK.test(ch) ? 14.2 : 7.6;
+    return Math.max(m, w);
+  }, 0);
+  return Math.min(260, Math.max(80, widest * (isRoot ? 1.16 : 1) + 32));
 }
 
 /**
@@ -31,7 +44,13 @@ export function layoutTree(
   all: MindNode[],
   mapId: string,
   edgeType: Edge["type"] = "smoothstep",
+  sizes?: NodeSizes,
 ) {
+  const sizeOf = (n: MindNode) => {
+    const m = sizes?.get(n.id);
+    if (m) return m;
+    return { w: estimateWidth(n.text || "새 노드", n.parentId === null), h: NODE_H };
+  };
   const live = all.filter((n) => n.mapId === mapId && !n.deletedAt);
   const byParent = new Map<string | null, MindNode[]>();
   for (const n of live) {
@@ -46,13 +65,11 @@ export function layoutTree(
   // 1) 각 서브트리가 차지하는 세로 높이
   const subtreeH = new Map<string, number>();
   const measure = (n: MindNode): number => {
+    const own = sizeOf(n).h;
     const kids = visibleChildren(n);
-    let h = NODE_H;
+    let h = own;
     if (kids.length) {
-      h = Math.max(
-        NODE_H,
-        kids.reduce((sum, k) => sum + measure(k), 0) + GAP_Y * (kids.length - 1),
-      );
+      h = Math.max(own, kids.reduce((sum, k) => sum + measure(k), 0) + GAP_Y * (kids.length - 1));
     }
     subtreeH.set(n.id, h);
     return h;
@@ -68,11 +85,11 @@ export function layoutTree(
    */
   const place = (n: MindNode, anchorX: number, slotTop: number, dir: Dir) => {
     const h = subtreeH.get(n.id)!;
-    const w = estimateWidth(n.text || "새 노드");
+    const { w, h: nodeH } = sizeOf(n);
 
     // 직접 옮긴 카드는 저장된 좌표가 실제 위치
     const ex = n.x ?? (dir === "right" ? anchorX : anchorX - w);
-    const ey = n.y ?? slotTop + h / 2 - NODE_H / 2;
+    const ey = n.y ?? slotTop + h / 2 - nodeH / 2;
 
     nodes.push({
       id: n.id,
@@ -87,10 +104,10 @@ export function layoutTree(
 
     const kidsH =
       kids.reduce((sum, k) => sum + subtreeH.get(k.id)!, 0) + GAP_Y * (kids.length - 1);
-    let cy = ey + NODE_H / 2 - kidsH / 2;
+    let cy = ey + nodeH / 2 - kidsH / 2;
 
     for (const k of kids) {
-      const kw = estimateWidth(k.text || "새 노드");
+      const kw = sizeOf(k).w;
       // 직접 옮긴 카드는 부모와의 좌우 관계로 방향이 정해지고, 아니면 부모 방향을 물려받는다
       const kDir: Dir =
         k.x !== null ? (k.x + kw / 2 < ex + w / 2 ? "left" : "right") : dir;
